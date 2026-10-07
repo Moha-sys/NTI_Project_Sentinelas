@@ -82,6 +82,8 @@ class LiveMicroservice:
         self.errors_total = 0
         self.added_latency_ms = 0
         self.is_burning_cpu = False
+        self.is_memory_leaking = False
+        self.packet_loss_active = False
         self.memory_buffer = []
 
         self._setup_routes()
@@ -97,6 +99,16 @@ class LiveMicroservice:
                 )
 
             self.requests_total += 1
+
+            if getattr(self, "packet_loss_active", False):
+                import random
+                if random.random() < 0.65:
+                    self.errors_total += 1
+                    return Response(
+                        content=f"HTTP 500 Internal Server Error: Network packet dropped / connection reset on {self.name}",
+                        status_code=500
+                    )
+
             if self.added_latency_ms > 0:
                 await asyncio.sleep(self.added_latency_ms / 1000.0)
             return await call_next(request)
@@ -181,6 +193,9 @@ class LiveMicroservice:
         except Exception:
             rss_mb = 28.0
 
+        if self.is_memory_leaking:
+            rss_mb = round(rss_mb + 175.0 + len(self.memory_buffer) * 25.0, 2)
+
         if self.is_burning_cpu:
             cpu = 94.6
         else:
@@ -230,13 +245,24 @@ class LiveMicroservice:
             self.is_burning_cpu = False
         threading.Thread(target=_burner, daemon=True).start()
 
+    def leak_memory(self, mb: int = 150):
+        self.is_memory_leaking = True
+        self.memory_buffer.append(bytearray(mb * 1024 * 1024))
+
+    def set_packet_loss(self, active: bool = True):
+        self.packet_loss_active = active
+
     def set_latency(self, ms: int):
         self.added_latency_ms = ms
 
     def reset_chaos(self):
         self.is_burning_cpu = False
+        self.is_memory_leaking = False
+        self.packet_loss_active = False
         self.added_latency_ms = 0
         self.memory_buffer.clear()
+        import gc
+        gc.collect()
 
 class ProcessMeshManager:
     _instance = None
@@ -287,16 +313,29 @@ class ProcessMeshManager:
                 "node": p0.get("node")
             }
 
+        import random
+
+        # Check if cascading failure from redis-cart affects cart-service / frontend
+        redis_s = self._find_service("redis-cart")
+        redis_down = redis_s is not None and not redis_s.is_running
+
+        is_cart = name in ["cart-service", "cartservice"]
+        is_front = name in ["frontend"]
+
         if not s.is_running:
             return {
                 "service": name,
+                "service_name": name,
                 "status": "CRASHED",
+                "service_up": 0,
                 "port": s.port,
                 "language": s.meta.get("language"),
                 "role": s.meta.get("role"),
                 "pid": os.getpid(),
                 "cpu_percent": 0.0,
                 "memory_mb": 0.0,
+                "latency_ms": 0.0,
+                "error_rate": 1.0,
                 "uptime_seconds": 0,
                 "requests_total": s.requests_total,
                 "added_latency_ms": 0,
@@ -305,15 +344,38 @@ class ProcessMeshManager:
             }
 
         cpu, mem = s._get_resource_usage()
+
+        # Calculate error rate
+        if getattr(s, "packet_loss_active", False):
+            err_rate = round(random.uniform(0.55, 0.75), 3)
+        elif is_cart and redis_down:
+            err_rate = round(random.uniform(0.70, 0.90), 3)
+        elif is_front and redis_down:
+            err_rate = round(random.uniform(0.35, 0.50), 3)
+        else:
+            err_rate = 0.0
+
+        # Calculate latency
+        base_lat = random.uniform(12.0, 24.0)
+        total_lat = round(s.added_latency_ms + base_lat, 2)
+        if is_cart and redis_down:
+            total_lat = round(total_lat + random.uniform(250.0, 420.0), 2)
+        elif is_front and redis_down:
+            total_lat = round(total_lat + random.uniform(120.0, 220.0), 2)
+
         return {
             "service": name,
-            "status": "HEALTHY",
+            "service_name": name,
+            "status": "HEALTHY" if err_rate == 0.0 else "DEGRADED",
+            "service_up": 1,
             "port": s.port,
             "language": s.meta.get("language"),
             "role": s.meta.get("role"),
             "pid": os.getpid(),
             "cpu_percent": cpu,
             "memory_mb": mem,
+            "latency_ms": total_lat,
+            "error_rate": err_rate,
             "uptime_seconds": round(time.time() - s.start_time, 1),
             "requests_total": s.requests_total,
             "added_latency_ms": s.added_latency_ms,
@@ -357,11 +419,13 @@ class ProcessMeshManager:
 
     def inject_real_fault(self, name: str, experiment_type: str) -> Dict[str, Any]:
         s = self._find_service(name)
-        if not s:
+        if not s and experiment_type.lower() not in ["cascade_redis_drop", "cascaderedisdrop"]:
             return {"status": "ERROR", "message": f"Service '{name}' not found in mesh"}
 
+        norm_type = experiment_type.lower().replace("-", "_")
         k8s_action_msg = ""
-        if experiment_type in ["PodFailure", "ProcessKill", "SIGKILL"]:
+
+        if norm_type in ["pod_failure", "podfailure", "processkill", "sigkill"]:
             s.kill_pod()
 
             # Execute real Kubernetes Pod Kill
@@ -390,7 +454,7 @@ class ProcessMeshManager:
                 "message": f"Killed microservice {name} (SIGKILL / Exit 137). Port {s.port} returns HTTP 503.{k8s_action_msg}"
             }
 
-        elif experiment_type in ["StressChaos", "CPUBurn"]:
+        elif norm_type in ["cpu_stress", "stresschaos", "cpuburn"]:
             s.burn_cpu()
 
             # Trigger real CPU & RAM stress inside the Kubernetes pod
@@ -413,13 +477,12 @@ class ProcessMeshManager:
                 "message": f"Real CPU & Memory stress burner activated on {name}.{k8s_action_msg}"
             }
 
-        elif experiment_type in ["NetworkLatency", "LatencySpike"]:
+        elif norm_type in ["network_latency", "networklatency", "latencyspike"]:
             s.set_latency(850)
 
             # Trigger real network latency in the Kubernetes pod pipeline
             k8s_pod = self._get_k8s_pod_name(name)
             if k8s_pod:
-                # Set latency flag and send a probe request to trigger warning log
                 latency_cmd = (
                     'echo 850 > /tmp/latency_ms; '
                     'nohup python3 -c "import urllib.request, time; time.sleep(0.1); '
@@ -438,10 +501,73 @@ class ProcessMeshManager:
                 "message": f"Injected 850ms real HTTP latency into {name} request pipeline.{k8s_action_msg}"
             }
 
+        elif norm_type in ["memory_leak", "memoryleak"]:
+            s.leak_memory(150)
+            k8s_pod = self._get_k8s_pod_name(name)
+            if k8s_pod:
+                mem_cmd = (
+                    'nohup python3 -c "import time; '
+                    'buf = [bytearray(20*1024*1024) for _ in range(7)]; '
+                    'time.sleep(90)" </dev/null >/dev/null 2>&1 &'
+                )
+                self._exec_in_k8s_pod(name, mem_cmd)
+                k8s_action_msg = f" Memory allocation buffer injected into Kubernetes pod '{k8s_pod}'."
+
+            return {
+                "status": "SUCCESS",
+                "action": "MEMORY_LEAK",
+                "service": name,
+                "k8s_pod": k8s_pod,
+                "message": f"Injected memory leak (+180MB) into {name}.{k8s_action_msg}"
+            }
+
+        elif norm_type in ["packet_loss", "packetloss", "networkpartition"]:
+            s.set_packet_loss(True)
+            return {
+                "status": "SUCCESS",
+                "action": "PACKET_LOSS",
+                "service": name,
+                "error_rate": 0.65,
+                "message": f"Injected 65% packet loss and 5xx transport drops into {name}."
+            }
+
+        elif norm_type in ["cascade_redis_drop", "cascaderedisdrop"]:
+            redis_s = self._find_service("redis-cart")
+            if redis_s:
+                redis_s.kill_pod()
+            pod_to_kill = self._get_k8s_pod_name("redis-cart")
+            if pod_to_kill:
+                try:
+                    import subprocess
+                    subprocess.run(
+                        ["kubectl", "delete", "pod", pod_to_kill, "-n", "default", "--now"],
+                        capture_output=True,
+                        text=True,
+                        timeout=10
+                    )
+                    k8s_action_msg = f" Kubernetes Pod '{pod_to_kill}' terminated via kubectl."
+                except Exception:
+                    pass
+
+            return {
+                "status": "SUCCESS",
+                "action": "CASCADE_REDIS_DROP",
+                "service": "redis-cart",
+                "affected_services": ["cart-service", "frontend"],
+                "message": f"Terminated redis-cart. Cascading session failures propagating to cart-service and frontend.{k8s_action_msg}"
+            }
+
         else:
             return {"status": "ERROR", "message": f"Unsupported experiment type: {experiment_type}"}
 
     def remediate_service(self, name: str) -> Dict[str, Any]:
+        if name.lower() == "all":
+            for s in self.services.values():
+                s.resurrect_pod()
+                s.reset_chaos()
+                self._exec_in_k8s_pod(s.name, "rm -f /tmp/cpu_stress /tmp/latency_ms; killall -9 python3 2>/dev/null || true")
+            return {"status": "SUCCESS", "message": "All microservices restored to normal operation."}
+
         s = self._find_service(name)
         if not s:
             return {"status": "ERROR", "message": f"Service '{name}' not found"}
@@ -450,6 +576,12 @@ class ProcessMeshManager:
 
         # Clean up chaos flags in the Kubernetes pod
         self._exec_in_k8s_pod(name, "rm -f /tmp/cpu_stress /tmp/latency_ms; killall -9 python3 2>/dev/null || true")
+
+        # Also heal redis-cart if this was a cascading redis drop
+        if name in ["cart-service", "cartservice"]:
+            redis_s = self._find_service("redis-cart")
+            if redis_s and not redis_s.is_running:
+                redis_s.resurrect_pod()
 
         # Trigger real rollout restart in Kubernetes if deployment exists
         k8s_rollout = False
