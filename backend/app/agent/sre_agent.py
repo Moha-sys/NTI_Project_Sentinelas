@@ -234,15 +234,34 @@ class AutonomousSREAgent:
     ) -> float:
         if not ml_result:
             return 0.5
-        rc = ml_result.get("root_cause") or {}
-        # Prefer the per-window confidence of the winning class
-        conf = rc.get("root_cause_service_confidence")
+        # Prefer the LightGBM per-window confidence of the majority winner
+        conf = self._classifier_confidence(ml_result)
         if conf is None:
             conf = 0.5 + 0.4 * float(ml_result.get("anomaly_probability") or 0.0)
         # Blend lightly with runbook similarity when available
         if matched_runbook:
-            conf = 0.8 * conf + 0.2 * matched_runbook["similarity_score"]
+            conf = 0.9 * conf + 0.1 * matched_runbook["similarity_score"]
         return round(float(min(max(conf, 0.0), 1.0)), 4)
+
+    @staticmethod
+    def _classifier_confidence(ml_result: Dict) -> Optional[float]:
+        """Max LightGBM root-cause confidence across anomalous windows that
+        voted for the majority winner. None when unavailable."""
+        try:
+            winner = ml_result.get("root_cause_service")
+            best: Optional[float] = None
+            for w in ml_result.get("windows") or []:
+                if not w.get("is_anomaly"):
+                    continue
+                rc = w.get("root_cause") or {}
+                if winner and rc.get("root_cause_service") != winner:
+                    continue
+                c = rc.get("root_cause_service_confidence")
+                if c is not None and (best is None or float(c) > best):
+                    best = float(c)
+            return best
+        except (TypeError, ValueError, AttributeError):
+            return None
 
     async def _synthesize_narrative(
         self,

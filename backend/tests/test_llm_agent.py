@@ -91,3 +91,38 @@ def test_agent_deterministic_fallback_without_llm(monkeypatch):
     assert rca["narrative_source"] == "ml_deterministic_fallback"
     assert rca["llm_narrative"] is None
     assert rca["confidence_score"] > 0
+
+
+def test_combined_confidence_uses_classifier_certainty():
+    """Clean crash signature -> LightGBM confidence dominates -> >= 0.90."""
+    from app.agent.sre_agent import AutonomousSREAgent
+
+    agent = AutonomousSREAgent.__new__(AutonomousSREAgent)
+    ml_result = {
+        "is_anomaly": True,
+        "anomaly_probability": 0.59,
+        "root_cause_service": "cart-service",
+        "root_cause_fault_type": "pod_failure",
+        "windows": [
+            {"is_anomaly": True,
+             "root_cause": {"root_cause_service": "cart-service",
+                            "root_cause_service_confidence": 0.97,
+                            "fault_type": "pod_failure"}},
+        ],
+    }
+    runbook = {"title": "rb", "similarity_score": 0.56}
+
+    assert agent._classifier_confidence(ml_result) == 0.97
+    conf = agent._combined_confidence(ml_result, runbook)
+    assert conf == round(0.9 * 0.97 + 0.1 * 0.56, 4)  # 0.929
+    assert conf >= 0.90
+
+    # Fallback path preserved when classifier confidence is absent
+    ml_no_windows = {"is_anomaly": True, "anomaly_probability": 0.59,
+                     "root_cause_service": "cart-service", "windows": []}
+    assert agent._classifier_confidence(ml_no_windows) is None
+    fallback = agent._combined_confidence(ml_no_windows, runbook)
+    assert fallback == round(0.9 * (0.5 + 0.4 * 0.59) + 0.1 * 0.56, 4)
+
+    # No ML at all -> neutral 0.5
+    assert agent._combined_confidence(None, runbook) == 0.5
