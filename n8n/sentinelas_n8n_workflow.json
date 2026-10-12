@@ -1,0 +1,212 @@
+{
+  "id": "sentinelas-anomaly-wf1",
+  "name": "Sentinelas — Anomaly Alert Router",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sentinelas-anomaly",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-trigger",
+      "name": "Sentinelas Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "sentinelas-anomaly"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ ($json.body ?? $json).confidence_score }}",
+              "operation": "largerEqual",
+              "value2": 0.6
+            }
+          ]
+        }
+      },
+      "id": "node-confidence-filter",
+      "name": "Confidence ≥ 0.6 ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $input.first().json.body ?? $input.first().json;\nconst ts = b.timestamp ? new Date(b.timestamp * 1000).toISOString() : new Date().toISOString();\nconst score = Number(b.confidence_score ?? 0);\nconst pct = (score * 100).toFixed(1);\n// Telegram parse_mode is HTML, so < > & in telemetry values must be escaped.\nconst esc = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst service = esc(b.service_name ?? 'unknown');\nconst type = esc(b.anomaly_type ?? 'unknown');\nconst status = esc(b.status ?? 'ANOMALY_DETECTED');\nconst rcService = esc(b.root_cause_service ?? 'Investigating...');\nconst rcFault = esc(b.root_cause_fault_type ?? 'n/a');\nconst rawService = b.service_name ?? 'unknown';\nconst rawType = b.anomaly_type ?? 'unknown';\nconst rawStatus = b.status ?? 'ANOMALY_DETECTED';\nconst rawRcService = b.root_cause_service ?? 'Investigating...';\nconst rawRcFault = b.root_cause_fault_type ?? 'n/a';\nconst rawScore = b.anomaly_score ?? 'n/a';\nreturn [{\n  json: {\n    service_name:     rawService,\n    anomaly_type:     rawType,\n    confidence_score: score,\n    timestamp:        ts,\n    status:           rawStatus,\n    anomaly_score:    b.anomaly_score ?? null,\n    root_cause_service:    b.root_cause_service ?? null,\n    root_cause_fault_type: b.root_cause_fault_type ?? null,\n    score_pct: pct,\n    telegram_text: `\\ud83d\\udea8 <b>Sentinelas Anomaly Alert</b>\\n\\n<b>Service:</b> ${service}\\n<b>Type:</b> ${type}\\n<b>Confidence:</b> ${pct}%\\n<b>Status:</b> ${status}\\n<b>Time:</b> ${ts}\\n<b>Root Cause:</b> ${rcService} \\u2014 ${rcFault}`,\n    email_subject: `[Sentinelas] Anomaly in ${rawService} (${pct}% confidence)`,\n    email_body: `Sentinelas Anomaly Detected\\n\\nService: ${rawService}\\nAnomaly Type: ${rawType}\\nConfidence: ${pct}%\\nStatus: ${rawStatus}\\nTimestamp: ${ts}\\nRoot Cause Service: ${rawRcService}\\nRoot Cause Fault: ${rawRcFault}\\nAnomaly Score: ${rawScore}\\n\\n-- Sentinelas AIOps Platform`\n  }\n}];"
+      },
+      "id": "node-format-message",
+      "name": "Format Alert Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 240]
+    },
+    {
+      "parameters": {
+        "chatId": "994169451",
+        "text": "={{ $('Format Alert Message').first().json.telegram_text }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "node-telegram",
+      "name": "Telegram Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [960, 160],
+      "credentials": {
+        "telegramApi": {
+          "id": "sentinelas-telegram-bot",
+          "name": "Sentinelas Alert Bot"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "fromEmail": "nourhanelshieikh71@gmail.com",
+        "toEmail": "nourhanelshieikh71@gmail.com",
+        "subject": "={{ $('Format Alert Message').first().json.email_subject }}",
+        "text": "={{ $('Format Alert Message').first().json.email_body }}",
+        "options": {}
+      },
+      "id": "node-email",
+      "name": "Email Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [960, 340],
+      "credentials": {
+        "smtp": {
+          "id": "sentinelas-gmail-smtp",
+          "name": "Gmail SMTP"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ received: true, routed: true, service: $('Format Alert Message').first().json.service_name, anomaly_type: $('Format Alert Message').first().json.anomaly_type, confidence_score: $('Format Alert Message').first().json.confidence_score, telegram_sent: ($('Telegram Alert').first().json.result && $('Telegram Alert').first().json.ok) ?? null, email_sent: ($('Email Alert').first().json.data && true) ?? null }) }}"
+      },
+      "id": "node-respond-ok",
+      "name": "Respond 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1200, 240]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"received\": true, \"routed\": false, \"reason\": \"confidence_score below threshold\" }"
+      },
+      "id": "node-respond-skip",
+      "name": "Respond 200 Skipped",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [720, 440]
+    }
+  ],
+  "connections": {
+    "Sentinelas Webhook": {
+      "main": [
+        [
+          {
+            "node": "Confidence ≥ 0.6 ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confidence ≥ 0.6 ?": {
+      "main": [
+        [
+          {
+            "node": "Format Alert Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 200 Skipped",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Alert Message": {
+      "main": [
+        [
+          {
+            "node": "Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Alert": {
+      "main": [
+        [
+          {
+            "node": "Email Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Alert": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": ""
+  },
+  "pinData": {},
+  "versionId": "1.0.0",
+  "triggerCount": 0,
+  "tags": [],
+  "_comment": {
+    "description": "Sentinelas n8n anomaly alert routing workflow (Telegram + Email).",
+    "flow": "Webhook -> IF confidence>=0.6 -> Format -> Telegram -> Email -> Respond (serial, so the webhook responds exactly once)",
+    "threshold_note": "0.6, not 0.7: the LightGBM model emits ~0.67 for clear anomalies, so a 0.7 gate suppressed genuine detections.",
+    "webhook_url": "http://localhost:4555/webhook/sentinelas-anomaly",
+    "credentials_required": [
+      "Sentinelas Alert Bot (telegramApi) — BotFather access token, id=sentinelas-telegram-bot",
+      "Gmail SMTP (smtp) — smtp.gmail.com:587, user=nourhanelshieikh71@gmail.com, 16-char Gmail App Password, id=sentinelas-gmail-smtp"
+    ],
+    "why_not_vars": "$vars (TELEGRAM_CHAT_ID / ALERT_*_EMAIL) is empty on this instance, so chatId and addresses are set inline; the bot token lives only in the encrypted credential.",
+    "payload_schema": {
+      "service_name": "string  — originating microservice",
+      "anomaly_type": "string  — fault classification label",
+      "confidence_score": "float   — anomaly probability [0..1]",
+      "timestamp": "float   — unix epoch",
+      "status": "string  — alert lifecycle (ANOMALY_DETECTED | INVESTIGATING | ...)",
+      "anomaly_score": "float   — raw IsolationForest decision score (optional)",
+      "root_cause_service": "string  — predicted root-cause service (optional)",
+      "root_cause_fault_type": "string  — predicted fault class (optional)"
+    }
+  }
+}

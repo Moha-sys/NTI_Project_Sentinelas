@@ -31,6 +31,15 @@ class Settings(BaseSettings):
     SLA_CLIENT_B_SECONDS: int = 900   # 15 minutes
     SLA_CLIENT_C_SECONDS: int = 1800  # 30 minutes
 
+    # n8n outbound webhook — published/active workflow endpoint.
+    # Port 4555 = host port mapped to the n8n_main container.
+    # Path must match the webhook node's "path" (Sentinelas Webhook node).
+    # Override via N8N_WEBHOOK_URL env var or .env to change target.
+    N8N_WEBHOOK_URL: str = os.getenv(
+        "N8N_WEBHOOK_URL",
+        "http://localhost:4555/webhook/sentinelas-anomaly",
+    )
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 settings = Settings()

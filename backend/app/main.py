@@ -21,6 +21,7 @@ from app.api.chaos import router as chaos_router
 from app.api.benchmarks import router as benchmarks_router
 from app.api.mesh import router as mesh_router
 from app.api.ml import router as ml_router
+from app.api.webhooks import router as webhooks_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -80,6 +81,7 @@ app.include_router(chaos_router, prefix=settings.API_V1_PREFIX)
 app.include_router(benchmarks_router, prefix=settings.API_V1_PREFIX)
 app.include_router(mesh_router, prefix=settings.API_V1_PREFIX)
 app.include_router(ml_router, prefix=settings.API_V1_PREFIX)
+app.include_router(webhooks_router, prefix=settings.API_V1_PREFIX)
 
 # Serve built React dashboard or embedded single-page app
 DASHBOARD_HTML_FILE = Path(__file__).resolve().parent.parent / "static" / "index.html"
