@@ -67,8 +67,8 @@
     },
     {
       "parameters": {
-        "fromEmail": "nourhanelshieikh71@gmail.com",
-        "toEmail": "nourhanelshieikh71@gmail.com",
+        "fromEmail": "nourhanelsiekh71@gmail.com",
+        "toEmail": "nourhanelsiekh71@gmail.com",
         "subject": "={{ $('Format Alert Message').first().json.email_subject }}",
         "text": "={{ $('Format Alert Message').first().json.email_body }}",
         "options": {}
@@ -195,7 +195,7 @@
     "webhook_url": "http://localhost:4555/webhook/sentinelas-anomaly",
     "credentials_required": [
       "Sentinelas Alert Bot (telegramApi) — BotFather access token, id=sentinelas-telegram-bot",
-      "Gmail SMTP (smtp) — smtp.gmail.com:587, user=nourhanelshieikh71@gmail.com, 16-char Gmail App Password, id=sentinelas-gmail-smtp"
+      "Gmail SMTP (smtp) — smtp.gmail.com:587, user=nourhanelsiekh71@gmail.com, 16-char Gmail App Password, id=sentinelas-gmail-smtp"
     ],
     "why_not_vars": "$vars (TELEGRAM_CHAT_ID / ALERT_*_EMAIL) is empty on this instance, so chatId and addresses are set inline; the bot token lives only in the encrypted credential.",
     "payload_schema": {

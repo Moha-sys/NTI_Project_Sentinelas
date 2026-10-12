@@ -100,7 +100,7 @@ Create/replace one (n8n must be stopped):
 ```bash
 cat > /tmp/cred.json <<'JSON'
 [ { "id": "sentinelas-gmail-smtp", "name": "Gmail SMTP", "type": "smtp",
-    "data": { "user": "nourhanelshieikh71@gmail.com", "password": "xxxx xxxx xxxx xxxx",
+    "data": { "user": "nourhanelsiekh71@gmail.com", "password": "xxxx xxxx xxxx xxxx",
               "host": "smtp.gmail.com", "port": 587, "secure": false,
               "starttls": true, "disableStartTls": false } } ]
 JSON
