@@ -974,6 +974,11 @@ Fetching real Prometheus metrics from host...
         logMsg(`FAULT INJECTED: ${data.ground_truth.ground_truth_cause}`);
         logMsg(`Alerts Correlated: ${data.compressed_alerts_count} telemetry alerts grouped into Incident ${data.correlated_incident_id}`);
         logMsg(`AI Diagnosis: ${data.investigation.root_cause_analysis.diagnosis}`);
+        if (data.alert && data.alert.payload) {
+          const a = data.alert.payload;
+          const pct = (Number(a.confidence_score) * 100).toFixed(1);
+          logMsg(`Alert dispatched to n8n: ${a.anomaly_type} (confidence ${pct}%) → Telegram + Email`);
+        }
 
         showToast(`Fault injected on ${service}. Incident created.`, "warning");
         await loadMeshStatus();

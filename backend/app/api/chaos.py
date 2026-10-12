@@ -2,9 +2,11 @@ import time
 import logging
 from typing import Dict, Any, List
 from pydantic import BaseModel
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 from app.correlation.engine import RawAlert, get_correlation_engine
 from app.agent.sre_agent import get_sre_agent
+from app.config import settings
+from app.webhooks.n8n_notifier import build_payload, notify_n8n
 
 logger = logging.getLogger(__name__)
 
@@ -43,10 +45,13 @@ CHAOS_SIGNATURES = {
 }
 
 @router.post("/inject")
-async def inject_chaos(req: ChaosInjectionRequest):
+async def inject_chaos(req: ChaosInjectionRequest, background_tasks: BackgroundTasks):
     """
     Injects a precision failure into the microservice mesh,
-    records Ground Truth in the Ledger, and cascades telemetry alerts into the correlation engine.
+    records Ground Truth in the Ledger, cascades telemetry alerts into the
+    correlation engine, and — once the AI agent has finished its
+    investigation — fires the n8n anomaly webhook so the alert actually
+    reaches Telegram and email.
     """
     sig = CHAOS_SIGNATURES.get(req.experiment_type, {
         "symptom": "Generic service degradation",
@@ -121,13 +126,50 @@ async def inject_chaos(req: ChaosInjectionRequest):
     ledger_entry["confidence_score"] = investigation["root_cause_analysis"]["confidence_score"]
     ledger_entry["investigation_duration_seconds"] = investigation["investigation_duration_seconds"]
 
+    # ── Alert delivery ────────────────────────────────────────────────────────
+    # The investigation has produced a root cause and a confidence score, so
+    # forward it to n8n. The workflow's own gate (confidence >= 0.6) decides
+    # whether this becomes a Telegram/email alert or is silently acknowledged.
+    rca = investigation["root_cause_analysis"]
+    ml_prediction = rca.get("ml_prediction") or {}
+    root_cause_service = (
+        ml_prediction.get("root_cause_service")
+        or rca.get("primary_service")
+        or req.service
+    )
+    root_cause_fault = (
+        ml_prediction.get("root_cause_fault_type")
+        or req.experiment_type.lower()
+    )
+    confidence = float(rca.get("confidence_score") or 0.0)
+
+    alert_payload = build_payload(
+        service_name=root_cause_service,
+        anomaly_type=f"{root_cause_fault}@{root_cause_service}",
+        confidence_score=confidence,
+        status="ANOMALY_DETECTED",
+        timestamp=injected_at,
+        extra={
+            "anomaly_score": ml_prediction.get("anomaly_score"),
+            "root_cause_service": root_cause_service,
+            "root_cause_fault_type": root_cause_fault,
+        },
+    )
+    background_tasks.add_task(notify_n8n, alert_payload)
+    ledger_entry["alert_payload"] = alert_payload
+
     return {
         "status": "CHAOS_INJECTED",
         "experiment_id": experiment_id,
         "ground_truth": ledger_entry,
         "correlated_incident_id": incident.incident_id,
         "compressed_alerts_count": incident.total_alerts,
-        "investigation": investigation
+        "investigation": investigation,
+        "alert": {
+            "dispatched_to_n8n": True,
+            "webhook_url": settings.N8N_WEBHOOK_URL,
+            "payload": alert_payload,
+        },
     }
 
 @router.get("/ledger")

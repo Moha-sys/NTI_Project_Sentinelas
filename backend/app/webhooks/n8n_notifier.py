@@ -55,7 +55,7 @@ async def notify_n8n(payload: dict) -> bool:
         logger.debug("N8N_WEBHOOK_URL is not configured — skipping notification")
         return False
 
-    # Send exactly the five required fields to n8n
+    # Send the five required fields to n8n
     outbound = {
         "service_name":     payload.get("service_name", "unknown"),
         "anomaly_type":     payload.get("anomaly_type", "unknown"),
@@ -63,6 +63,12 @@ async def notify_n8n(payload: dict) -> bool:
         "timestamp":        payload.get("timestamp", time.time()),
         "status":           payload.get("status", "ANOMALY_DETECTED"),
     }
+
+    # Optional RCA context, forwarded when present so the n8n alert can name
+    # the actual root cause instead of falling back to "Investigating...".
+    for key in ("anomaly_score", "root_cause_service", "root_cause_fault_type"):
+        if payload.get(key) is not None:
+            outbound[key] = payload[key]
 
     logger.info(
         "Sending anomaly alert to n8n → %s | service=%s anomaly_type=%s score=%.4f",
