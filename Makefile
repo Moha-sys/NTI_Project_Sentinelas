@@ -14,6 +14,7 @@ help:
 	@echo "  make dev-backend    - Run FastAPI backend in reload mode"
 	@echo "  make dev-dashboard  - Run React dashboard development server"
 	@echo "  make index-runbooks - Index DevOps runbooks into ChromaDB vector store"
+	@echo "  make train-ml       - Train Isolation Forest + LightGBM RCA models"
 	@echo "  make k8s-deploy     - Deploy target microservices to Kubernetes"
 	@echo "  make clean          - Remove temporary files and cached data"
 
@@ -27,6 +28,9 @@ test:
 
 index-runbooks:
 	$(PYTHON) -m app.rag.indexer
+
+train-ml:
+	cd backend && python -m app.ml.train
 
 dev-backend:
 	cd backend && ../$(PYTHON_VENV)/uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload

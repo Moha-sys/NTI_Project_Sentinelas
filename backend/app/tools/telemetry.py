@@ -59,10 +59,18 @@ class TelemetryTools:
             logger.warning(f"Tempo query error: {e}")
             return {"error": str(e)}
 
+    # Circuit breaker: after a connection failure, skip the K8s API for a while
+    _k8s_unavailable_until: float = 0.0
+    _K8S_RETRY_COOLDOWN_SECONDS: float = 120.0
+
     @classmethod
     def get_k8s_pod_status(cls, service_name: str, namespace: str = "default") -> Dict[str, Any]:
         """Fetch pod statuses and restart counts from Kubernetes API."""
         import os
+        import time as _time
+        if _time.time() < cls._k8s_unavailable_until:
+            return {"error": "kubernetes API cooling down after previous failure",
+                    "service": service_name, "pods": []}
         try:
             from kubernetes import client, config
             loaded = False
@@ -117,6 +125,19 @@ class TelemetryTools:
 
             return {"service": service_name, "namespace": namespace, "pods": items}
         except Exception as e:
+            import time as _time
+            err = str(e)
+            # Connection-level failures (no cluster / stale kubeconfig):
+            # open the circuit breaker so subsequent calls return instantly.
+            if any(k in err for k in ("Max retries exceeded", "ConnectionRefused",
+                                      "NewConnectionError", "Timeout", "timed out")):
+                cls._k8s_unavailable_until = (
+                    _time.time() + cls._K8S_RETRY_COOLDOWN_SECONDS
+                )
+                logger.warning(
+                    "Kubernetes API unreachable - pausing K8s queries for %ss",
+                    int(cls._K8S_RETRY_COOLDOWN_SECONDS),
+                )
             logger.debug(f"Kubernetes query notice: {e}")
-            return {"error": str(e), "service": service_name, "pods": []}
+            return {"error": err, "service": service_name, "pods": []}
 

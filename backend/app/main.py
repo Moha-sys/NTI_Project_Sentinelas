@@ -20,6 +20,7 @@ from app.api.rag import router as rag_router
 from app.api.chaos import router as chaos_router
 from app.api.benchmarks import router as benchmarks_router
 from app.api.mesh import router as mesh_router
+from app.api.ml import router as ml_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -43,6 +44,13 @@ async def lifespan(app: FastAPI):
         logger.info("Real Microservice Mesh active on ports 8081-8084 & 6380.")
     except Exception as e:
         logger.error(f"Failed to start microservice mesh: {e}")
+
+    try:
+        from app.ml.pipeline import get_rca_pipeline
+        health = get_rca_pipeline().ensure_loaded().health()
+        logger.info(f"ML RCA pipeline ready: {health}")
+    except Exception as e:
+        logger.error(f"Failed to initialize ML RCA pipeline: {e}")
 
     yield
     logger.info("Shutting down AIOps Platform Engine...")
@@ -71,6 +79,7 @@ app.include_router(rag_router, prefix=settings.API_V1_PREFIX)
 app.include_router(chaos_router, prefix=settings.API_V1_PREFIX)
 app.include_router(benchmarks_router, prefix=settings.API_V1_PREFIX)
 app.include_router(mesh_router, prefix=settings.API_V1_PREFIX)
+app.include_router(ml_router, prefix=settings.API_V1_PREFIX)
 
 # Serve built React dashboard or embedded single-page app
 DASHBOARD_HTML_FILE = Path(__file__).resolve().parent.parent / "static" / "index.html"

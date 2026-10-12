@@ -1,0 +1,116 @@
+{
+  "dataset": "aiops_chaos_dataset.csv",
+  "n_rows": 4000,
+  "n_timestamps": 800,
+  "train_timestamps": 560,
+  "test_timestamps": 240,
+  "train_normal_windows": 330,
+  "train_anomaly_windows": 230,
+  "test_anomaly_windows": 100,
+  "anomaly_detector": {
+    "test_auc": 0.9999,
+    "test_accuracy": 0.95
+  },
+  "root_cause_lgbm": {
+    "val_accuracy": 1.0,
+    "test_accuracy": 0.98,
+    "classes": [
+      "cart-service",
+      "frontend",
+      "payment-service",
+      "productcatalog-service",
+      "redis-cart"
+    ]
+  },
+  "fault_type_lgbm": {
+    "val_accuracy": 1.0,
+    "test_accuracy": 1.0,
+    "classes": [
+      "cascade_redis_drop",
+      "cpu_stress",
+      "memory_leak",
+      "network_latency",
+      "packet_loss",
+      "pod_failure"
+    ]
+  },
+  "top_features_root_cause": [
+    {
+      "feature": "redis-cart__error_rate",
+      "importance": 557
+    },
+    {
+      "feature": "payment-service__error_rate",
+      "importance": 418
+    },
+    {
+      "feature": "cart-service__error_rate",
+      "importance": 402
+    },
+    {
+      "feature": "frontend__error_rate",
+      "importance": 290
+    },
+    {
+      "feature": "productcatalog-service__latency_ms",
+      "importance": 274
+    },
+    {
+      "feature": "redis-cart__latency_ms",
+      "importance": 145
+    },
+    {
+      "feature": "frontend__memory_mb",
+      "importance": 134
+    },
+    {
+      "feature": "productcatalog-service__cpu_percent",
+      "importance": 129
+    }
+  ],
+  "root_cause_classification_report": {
+    "cart-service": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "frontend": {
+      "precision": 0.9375,
+      "recall": 1.0,
+      "f1-score": 0.967741935483871,
+      "support": 30.0
+    },
+    "payment-service": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 10.0
+    },
+    "productcatalog-service": {
+      "precision": 1.0,
+      "recall": 0.8,
+      "f1-score": 0.8888888888888888,
+      "support": 10.0
+    },
+    "redis-cart": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 30.0
+    },
+    "accuracy": 0.98,
+    "macro avg": {
+      "precision": 0.9875,
+      "recall": 0.96,
+      "f1-score": 0.9713261648745519,
+      "support": 100.0
+    },
+    "weighted avg": {
+      "precision": 0.98125,
+      "recall": 0.98,
+      "f1-score": 0.9792114695340501,
+      "support": 100.0
+    }
+  }
+}
