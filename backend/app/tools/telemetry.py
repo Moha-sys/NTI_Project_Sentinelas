@@ -83,13 +83,13 @@ class TelemetryTools:
             if not loaded:
                 possible_configs = [
                     os.environ.get("KUBECONFIG"),
-                    os.path.expanduser("~/.kube/config"),
                     "/home/moha/.kube/config",
+                    "/etc/rancher/k3s/k3s.yaml",
+                    os.path.expanduser("~/.kube/config"),
                     "/root/.kube/config",
-                    "/etc/rancher/k3s/k3s.yaml"
                 ]
                 for p in possible_configs:
-                    if p and os.path.exists(p) and os.path.getsize(p) > 0:
+                    if p and os.path.exists(p) and os.access(p, os.R_OK) and os.path.getsize(p) > 0:
                         try:
                             config.load_kube_config(config_file=p)
                             loaded = True

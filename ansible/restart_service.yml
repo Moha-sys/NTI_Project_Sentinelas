@@ -4,24 +4,25 @@
   connection: local
   gather_facts: false
   vars:
-    target_service: "{{ service | default('cartservice') }}"
+    target_service: "{{ service | default('cart-service') }}"
+    k8s_deployment: "{{ 'redis-cart' if target_service == 'redis-cart' else target_service | replace('-', '') }}"
     k8s_ns: "{{ target_ns | default('default') }}"
 
   tasks:
     - name: Log remediation start
       ansible.builtin.debug:
-        msg: "Initiating autonomous restart remediation for {{ target_service }} in namespace '{{ k8s_ns }}'"
+        msg: "Initiating autonomous restart remediation for {{ target_service }} (deployment/{{ k8s_deployment }}) in namespace '{{ k8s_ns }}'"
 
-    - name: Check if Kubernetes cluster is accessible
+    - name: Execute kubectl rollout restart deployment
       ansible.builtin.command:
-        cmd: "kubectl rollout restart deployment/{{ target_service }} -n {{ k8s_ns }}"
+        cmd: "kubectl rollout restart deployment/{{ k8s_deployment }} -n {{ k8s_ns }}"
       register: k8s_restart
-      ignore_errors: true
+      failed_when: k8s_restart.rc != 0 and 'already been triggered within the past second' not in (k8s_restart.stderr | default(''))
       changed_when: k8s_restart.rc == 0
 
-    - name: Self-healing fallback via process mesh supervisor
+    - name: Verify Kubernetes rollout output
       ansible.builtin.debug:
-        msg: "Kubernetes rollout result: {{ k8s_restart.stdout if k8s_restart.rc == 0 else 'Restarting container via Mesh Supervisor (HTTP 200 health check verified)' }}"
+        msg: "{{ k8s_restart.stdout if k8s_restart.stdout else 'deployment.apps/' ~ k8s_deployment ~ ' restarted' }}"
 
     - name: Verify service health status
       ansible.builtin.debug:

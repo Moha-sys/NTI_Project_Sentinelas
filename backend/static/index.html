@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AIOps Mission Control | Real On-Device Cloud Architecture</title>
+  <title>Sentinelas</title>
   
   <!-- Modern Inter & JetBrains Mono Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -18,28 +18,12 @@
 
   <script>
     tailwind.config = {
-      darkMode: 'class',
+      darkMode: ['selector', '[data-theme="dark"]'],
       theme: {
         extend: {
           fontFamily: {
             sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
             mono: ['JetBrains Mono', 'monospace'],
-          },
-          colors: {
-            brand: {
-              50: '#f0fdfa',
-              100: '#ccfbf1',
-              400: '#2dd4bf',
-              500: '#14b8a6',
-              600: '#0d9488',
-              900: '#134e4a',
-            },
-            surface: {
-              bg: '#090d16',
-              card: '#101726',
-              subtle: '#182238',
-              border: '#1f2e4d',
-            }
           }
         }
       }
@@ -47,109 +31,268 @@
   </script>
 
   <style>
+    :root {
+      --bg-page: #f8fafc;
+      --bg-header: rgba(255, 255, 255, 0.95);
+      --bg-card: #ffffff;
+      --bg-subtle: #f1f5f9;
+      --bg-terminal: #f1f5f9;
+      --border-color: #e2e8f0;
+      --border-subtle: #f1f5f9;
+      --text-primary: #0f172a;
+      --text-secondary: #64748b;
+      --text-terminal: #0f172a;
+      --accent-primary: #2563eb;
+      --accent-bg: #eff6ff;
+      --card-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+
+      --badge-ok-bg: #dcfce7;
+      --badge-ok-text: #15803d;
+      --badge-ok-border: #bbf7d0;
+
+      --badge-err-bg: #fee2e2;
+      --badge-err-text: #b91c1c;
+      --badge-err-border: #fecaca;
+
+      --badge-warn-bg: #fef3c7;
+      --badge-warn-text: #b45309;
+      --badge-warn-border: #fde68a;
+
+      --gate-bg: #fffbeb;
+      --gate-border: #f59e0b;
+    }
+
+    [data-theme="dark"] {
+      --bg-page: #090d16;
+      --bg-header: rgba(17, 24, 39, 0.95);
+      --bg-card: #111827;
+      --bg-subtle: #1f2937;
+      --bg-terminal: #0b0f19;
+      --border-color: #1f2937;
+      --border-subtle: #1f2937;
+      --text-primary: #f9fafb;
+      --text-secondary: #9ca3af;
+      --text-terminal: #e5e7eb;
+      --accent-primary: #3b82f6;
+      --accent-bg: rgba(59, 130, 246, 0.15);
+      --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+
+      --badge-ok-bg: rgba(6, 78, 59, 0.6);
+      --badge-ok-text: #6ee7b7;
+      --badge-ok-border: rgba(16, 185, 129, 0.35);
+
+      --badge-err-bg: rgba(127, 29, 29, 0.6);
+      --badge-err-text: #fca5a5;
+      --badge-err-border: rgba(239, 68, 68, 0.4);
+
+      --badge-warn-bg: rgba(120, 53, 15, 0.6);
+      --badge-warn-text: #fcd34d;
+      --badge-warn-border: rgba(245, 158, 11, 0.4);
+
+      --gate-bg: rgba(69, 26, 3, 0.45);
+      --gate-border: #f59e0b;
+    }
+
     body {
-      background-color: #090d16;
-      color: #e2e8f0;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
       font-family: 'Inter', system-ui, sans-serif;
       overflow-x: hidden;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
+
     .mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
+
+    .theme-header {
+      background-color: var(--bg-header);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .theme-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--card-shadow);
+    }
+    .theme-subtle {
+      background-color: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+    }
+    .theme-terminal {
+      background-color: var(--bg-terminal);
+      border: 1px solid var(--border-color);
+      color: var(--text-terminal);
+    }
+    .theme-input {
+      background-color: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+    }
+    .theme-input:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+    }
+    .theme-text-primary { color: var(--text-primary); }
+    .theme-text-secondary { color: var(--text-secondary); }
+    .theme-accent { color: var(--accent-primary); }
+    .theme-divider { border-color: var(--border-color); }
+
+    .tab-btn {
+      color: var(--text-secondary);
+      border-bottom: 2px solid transparent;
+    }
+    .tab-btn:hover {
+      color: var(--text-primary);
+      background-color: var(--bg-subtle);
+    }
     .tab-btn.active {
-      background-color: #14b8a6;
-      color: #042f2e;
+      background-color: var(--accent-bg);
+      color: var(--accent-primary);
+      border-bottom: 2px solid var(--accent-primary);
       font-weight: 600;
     }
+
+    .badge-healthy {
+      background-color: var(--badge-ok-bg);
+      color: var(--badge-ok-text);
+      border: 1px solid var(--badge-ok-border);
+    }
+    .badge-critical {
+      background-color: var(--badge-err-bg);
+      color: var(--badge-err-text);
+      border: 1px solid var(--badge-err-border);
+    }
+    .badge-pending {
+      background-color: var(--badge-warn-bg);
+      color: var(--badge-warn-text);
+      border: 1px solid var(--badge-warn-border);
+    }
+    .approval-gate {
+      background-color: var(--gate-bg);
+      border: 2px solid var(--gate-border);
+    }
+
     .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-    .custom-scroll::-webkit-scrollbar-track { background: #0c121e; }
-    .custom-scroll::-webkit-scrollbar-thumb { background: #1f2e4d; border-radius: 4px; }
+    .custom-scroll::-webkit-scrollbar-track { background: var(--bg-subtle); }
+    .custom-scroll::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+
     .pulse-dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
       display: inline-block;
+      background-color: #16a34a;
       animation: pulse 2s infinite;
     }
     @keyframes pulse {
-      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.7); }
-      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(20, 184, 166, 0); }
-      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(20, 184, 166, 0); }
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.5); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(22, 163, 74, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
     }
   </style>
+
+  <script>
+    // Apply persisted theme immediately before paint (default: light)
+    (function() {
+      const saved = localStorage.getItem('sentinelas_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', saved);
+    })();
+  </script>
 </head>
 <body class="min-h-screen flex flex-col">
 
   <!-- TOP APP HEADER -->
-  <header class="border-b border-surface-border bg-surface-card/90 backdrop-blur sticky top-0 z-50">
+  <header class="theme-header backdrop-blur sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       
       <!-- Brand & Project Title -->
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-lg bg-brand-500/10 border border-brand-500/30 flex items-center justify-center text-brand-400">
-          <i data-lucide="cpu" class="w-5 h-5"></i>
+        <div class="w-9 h-9 rounded-lg theme-subtle flex items-center justify-center theme-accent">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
         </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="font-bold text-white tracking-tight text-base">AIOps Command Center</span>
-            <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-brand-500/20 text-brand-300 border border-brand-500/30">REAL ARCHITECTURE</span>
-          </div>
-          <p class="text-xs text-slate-400">AIOPS COMMAND CENTER &bull; Local Microservice Mesh & Autonomous Self-Healing</p>
-        </div>
+        <span class="font-bold theme-text-primary tracking-tight text-lg">Sentinelas</span>
       </div>
 
-      <!-- Live Global Controls & Mode Toggle -->
-      <div class="flex items-center gap-4">
+      <!-- Live Global Controls, Mode Switcher & Theme Toggle -->
+      <div class="flex items-center gap-3">
         
         <!-- Live Cluster Heartbeat -->
-        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-subtle border border-surface-border text-xs text-slate-300">
-          <span class="pulse-dot bg-brand-400"></span>
+        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg theme-subtle text-xs theme-text-secondary">
+          <span id="headerHeartbeatDot" class="pulse-dot"></span>
           <span>Mesh Status:</span>
-          <span id="headerMeshHealth" class="font-semibold text-emerald-400">5/5 UP</span>
+          <span id="headerMeshHealth" class="font-semibold text-emerald-600">5/5 UP</span>
         </div>
 
         <!-- Human Approval vs Autonomous Mode Switcher -->
         <div class="flex items-center gap-2">
-          <button id="modeToggleBtn" onclick="toggleOperationalMode()" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-medium transition-all bg-amber-950/60 border-amber-600/50 text-amber-300 hover:bg-amber-900/50">
-            <i id="modeIcon" data-lucide="shield-alert" class="w-4 h-4"></i>
+          <button id="modeToggleBtn" onclick="toggleOperationalMode()" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all badge-pending">
+            <svg id="modeIconSvg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
             <span id="modeLabel">Human Approval Gate (Active)</span>
           </button>
         </div>
 
+        <!-- Theme Toggle Button (Light / Dark) -->
+        <button id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Light / Dark Theme" aria-label="Toggle Light / Dark Theme" class="p-2 rounded-lg theme-card theme-text-secondary hover:theme-text-primary transition-colors">
+          <!-- Sun SVG (shown in dark mode) -->
+          <svg id="themeIconSun" class="w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <!-- Moon SVG (shown in light mode) -->
+          <svg id="themeIconMoon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+
         <!-- Manual Refresh Button -->
-        <button onclick="refreshAllData()" title="Refresh Telemetry" class="p-2 rounded-lg bg-surface-subtle border border-surface-border text-slate-400 hover:text-white transition-colors">
-          <i id="refreshIcon" data-lucide="refresh-cw" class="w-4 h-4"></i>
+        <button onclick="refreshAllData()" title="Refresh Telemetry" aria-label="Refresh Telemetry" class="p-2 rounded-lg theme-card theme-text-secondary hover:theme-text-primary transition-colors">
+          <svg id="refreshIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
         </button>
 
       </div>
     </div>
 
     <!-- 5 DEDICATED NAVIGATION TABS -->
-    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 border-t border-surface-border/60 overflow-x-auto" aria-label="Main Navigation">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 border-t theme-divider overflow-x-auto" aria-label="Main Navigation">
       <button onclick="switchTab('architecture')" id="tab-architecture" class="tab-btn active px-4 py-2.5 rounded-t-lg text-xs flex items-center gap-2 transition-all">
-        <i data-lucide="network" class="w-4 h-4"></i>
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="2" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="16" y="16" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/>
+        </svg>
         <span>1. System Architecture</span>
       </button>
 
-      <button onclick="switchTab('metrics')" id="tab-metrics" class="tab-btn text-slate-400 hover:text-slate-200 px-4 py-2.5 rounded-t-lg text-xs flex items-center gap-2 transition-all">
-        <i data-lucide="activity" class="w-4 h-4"></i>
-        <span>2. Metrics & Prometheus</span>
+      <button onclick="switchTab('metrics')" id="tab-metrics" class="tab-btn px-4 py-2.5 rounded-t-lg text-xs flex items-center gap-2 transition-all">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        <span>2. Metrics &amp; Prometheus</span>
       </button>
 
-      <button onclick="switchTab('grafana')" id="tab-grafana" class="tab-btn text-slate-400 hover:text-slate-200 px-4 py-2.5 rounded-t-lg text-xs flex items-center gap-2 transition-all">
-        <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
-        <span>3. Visualization & Grafana</span>
+      <button onclick="switchTab('grafana')" id="tab-grafana" class="tab-btn px-4 py-2.5 rounded-t-lg text-xs flex items-center gap-2 transition-all">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        <span>3. Visualization &amp; Grafana</span>
       </button>
 
-      <button onclick="switchTab('chaos')" id="tab-chaos" class="tab-btn text-slate-400 hover:text-slate-200 px-4 py-2.5 rounded-t-lg text-xs flex items-center gap-2 transition-all">
-        <i data-lucide="zap" class="w-4 h-4 text-rose-400"></i>
+      <button onclick="switchTab('chaos')" id="tab-chaos" class="tab-btn px-4 py-2.5 rounded-t-lg text-xs flex items-center gap-2 transition-all">
+        <svg class="w-4 h-4 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
         <span>4. Chaos Engineering</span>
       </button>
 
-      <button onclick="switchTab('incidents')" id="tab-incidents" class="tab-btn text-slate-400 hover:text-slate-200 px-4 py-2.5 rounded-t-lg text-xs flex items-center gap-2 transition-all">
-        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400"></i>
-        <span>5. Incidents & Approvals</span>
-        <span id="incidentBadgeCount" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-slate-800 text-slate-300 font-mono">0</span>
+      <button onclick="switchTab('incidents')" id="tab-incidents" class="tab-btn px-4 py-2.5 rounded-t-lg text-xs flex items-center gap-2 transition-all">
+        <svg class="w-4 h-4 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <span>5. Incidents &amp; Approvals</span>
+        <span id="incidentBadgeCount" class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] theme-subtle theme-text-primary font-mono">0</span>
       </button>
     </nav>
   </header>
@@ -161,79 +304,66 @@
     <!-- TAB 1: SYSTEM ARCHITECTURE & TOPOLOGY -->
     <!-- ========================================================================================= -->
     <section id="view-architecture" class="tab-content active space-y-6">
-      
-      <!-- Overview Banner -->
-      <div class="bg-surface-card border border-surface-border rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <h2 class="text-lg font-bold text-white flex items-center gap-2">
-            <span>On-Device Microservice Topology</span>
-            <span class="text-xs px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">100% Real Processes</span>
-          </h2>
-          <p class="text-xs text-slate-400 mt-1">Real standalone services listening on local TCP sockets. Each container process exposes Prometheus metrics and responds to live restarts.</p>
-        </div>
-        <div class="flex items-center gap-3">
-          <div class="text-right">
-            <div class="text-xs text-slate-400">Host Engine</div>
-            <div class="text-sm font-semibold text-white mono">Python 3.12 + Uvicorn Async</div>
-          </div>
-          <button onclick="loadMeshStatus()" class="px-3 py-1.5 rounded-lg bg-surface-subtle hover:bg-surface-border border border-surface-border text-xs text-slate-300 flex items-center gap-1.5 transition-colors">
-            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+
+      <!-- High-Level Traffic Flow Diagram -->
+      <div class="theme-card rounded-xl p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xs font-semibold theme-text-secondary uppercase tracking-wider">Traffic Ingress &amp; Service Dependency Flow</h3>
+          <button onclick="loadMeshStatus()" class="px-3 py-1.5 rounded-lg theme-subtle text-xs font-medium theme-text-primary flex items-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
             <span>Poll Health</span>
           </button>
         </div>
-      </div>
-
-      <!-- High-Level Traffic Flow Diagram -->
-      <div class="bg-surface-card border border-surface-border rounded-xl p-6">
-        <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Traffic Ingress & Service Dependency Flow</h3>
         
         <div class="grid grid-cols-1 md:grid-cols-5 gap-3 relative">
           
           <!-- Ingress Card -->
-          <div class="border border-surface-border bg-surface-subtle/50 rounded-lg p-3 text-center flex flex-col items-center justify-center">
-            <div class="text-xs font-bold text-brand-400 uppercase">Client Ingress</div>
-            <div class="text-xs text-slate-400 mt-1">HTTP Browser</div>
-            <div class="mt-2 text-[11px] mono text-slate-500">Port :8000</div>
+          <div class="theme-subtle rounded-lg p-3 text-center flex flex-col items-center justify-center">
+            <div class="text-xs font-bold theme-accent uppercase">Client Ingress</div>
+            <div class="text-xs theme-text-secondary mt-1">HTTP Gateway</div>
+            <div class="mt-2 text-[11px] mono theme-text-secondary">Port :8000</div>
           </div>
 
           <!-- Frontend Service -->
-          <div id="diag-frontend" class="border border-brand-500/40 bg-surface-subtle rounded-lg p-3 text-center">
+          <div id="diag-frontend" class="theme-card rounded-lg p-3 text-center">
             <div class="flex items-center justify-between mb-1">
-              <span class="text-[10px] mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Go</span>
-              <span id="badge-diag-frontend" class="text-[10px] font-bold text-emerald-400">UP</span>
+              <span class="text-[10px] mono px-1.5 py-0.5 rounded theme-subtle theme-text-secondary">Go</span>
+              <span id="badge-diag-frontend" class="text-[10px] font-bold px-1.5 py-0.5 rounded badge-healthy">UP</span>
             </div>
-            <div class="font-semibold text-white text-xs">frontend</div>
-            <div class="text-[11px] mono text-slate-400 mt-1">Port 8083</div>
+            <div class="font-semibold theme-text-primary text-xs mt-1">frontend</div>
+            <div class="text-[11px] mono theme-text-secondary mt-1">Port 8083</div>
           </div>
 
           <!-- Downstream Payments -->
-          <div id="diag-payment-service" class="border border-brand-500/40 bg-surface-subtle rounded-lg p-3 text-center">
+          <div id="diag-payment-service" class="theme-card rounded-lg p-3 text-center">
             <div class="flex items-center justify-between mb-1">
-              <span class="text-[10px] mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Go</span>
-              <span id="badge-diag-payment-service" class="text-[10px] font-bold text-emerald-400">UP</span>
+              <span class="text-[10px] mono px-1.5 py-0.5 rounded theme-subtle theme-text-secondary">Go</span>
+              <span id="badge-diag-payment-service" class="text-[10px] font-bold px-1.5 py-0.5 rounded badge-healthy">UP</span>
             </div>
-            <div class="font-semibold text-white text-xs">payment-service</div>
-            <div class="text-[11px] mono text-slate-400 mt-1">Port 8081</div>
+            <div class="font-semibold theme-text-primary text-xs mt-1">payment-service</div>
+            <div class="text-[11px] mono theme-text-secondary mt-1">Port 8081</div>
           </div>
 
           <!-- Downstream Cart -->
-          <div id="diag-cart-service" class="border border-brand-500/40 bg-surface-subtle rounded-lg p-3 text-center">
+          <div id="diag-cart-service" class="theme-card rounded-lg p-3 text-center">
             <div class="flex items-center justify-between mb-1">
-              <span class="text-[10px] mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">C#</span>
-              <span id="badge-diag-cart-service" class="text-[10px] font-bold text-emerald-400">UP</span>
+              <span class="text-[10px] mono px-1.5 py-0.5 rounded theme-subtle theme-text-secondary">C#</span>
+              <span id="badge-diag-cart-service" class="text-[10px] font-bold px-1.5 py-0.5 rounded badge-healthy">UP</span>
             </div>
-            <div class="font-semibold text-white text-xs">cart-service</div>
-            <div class="text-[11px] mono text-slate-400 mt-1">Port 8082</div>
+            <div class="font-semibold theme-text-primary text-xs mt-1">cart-service</div>
+            <div class="text-[11px] mono theme-text-secondary mt-1">Port 8082</div>
           </div>
 
           <!-- Cache Buffer -->
-          <div id="diag-redis-cart" class="border border-brand-500/40 bg-surface-subtle rounded-lg p-3 text-center">
+          <div id="diag-redis-cart" class="theme-card rounded-lg p-3 text-center">
             <div class="flex items-center justify-between mb-1">
-              <span class="text-[10px] mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Redis</span>
-              <span id="badge-diag-redis-cart" class="text-[10px] font-bold text-emerald-400">UP</span>
+              <span class="text-[10px] mono px-1.5 py-0.5 rounded theme-subtle theme-text-secondary">Redis</span>
+              <span id="badge-diag-redis-cart" class="text-[10px] font-bold px-1.5 py-0.5 rounded badge-healthy">UP</span>
             </div>
-            <div class="font-semibold text-white text-xs">redis-cart</div>
-            <div class="text-[11px] mono text-slate-400 mt-1">Port 6380</div>
+            <div class="font-semibold theme-text-primary text-xs mt-1">redis-cart</div>
+            <div class="text-[11px] mono theme-text-secondary mt-1">Port 6380</div>
           </div>
 
         </div>
@@ -241,7 +371,7 @@
 
       <!-- Real Services Grid -->
       <div>
-        <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Live Service Status & Resource Metrics</h3>
+        <h3 class="text-xs font-semibold theme-text-secondary uppercase tracking-wider mb-3">Live Service Status &amp; Resource Metrics</h3>
         <div id="servicesStatusGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <!-- Dynamically populated -->
         </div>
@@ -257,59 +387,67 @@
       <!-- Top Resource KPI Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
-        <div class="bg-surface-card border border-surface-border rounded-xl p-4">
-          <div class="text-xs text-slate-400 font-medium">Cluster CPU Utilization</div>
-          <div class="text-2xl font-bold text-white mono mt-1" id="kpiCpuUsage">6.8%</div>
-          <div class="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
-            <i data-lucide="check-circle-2" class="w-3 h-3"></i>
-            <span>Operating within SLA threshold</span>
+        <div class="theme-card rounded-xl p-4">
+          <div class="text-xs theme-text-secondary font-medium">Cluster CPU Utilization</div>
+          <div class="text-2xl font-bold theme-text-primary mono mt-1" id="kpiCpuUsage">6.8%</div>
+          <div class="text-[11px] text-emerald-600 mt-1 flex items-center gap-1 font-medium">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <span>Operating within healthy baseline</span>
           </div>
         </div>
 
-        <div class="bg-surface-card border border-surface-border rounded-xl p-4">
-          <div class="text-xs text-slate-400 font-medium">Total Process Memory</div>
-          <div class="text-2xl font-bold text-white mono mt-1" id="kpiMemUsage">248 MB</div>
-          <div class="text-[11px] text-slate-400 mt-1">Direct resident memory /proc statm</div>
+        <div class="theme-card rounded-xl p-4">
+          <div class="text-xs theme-text-secondary font-medium">Total Process Memory</div>
+          <div class="text-2xl font-bold theme-text-primary mono mt-1" id="kpiMemUsage">248 MB</div>
+          <div class="text-[11px] theme-text-secondary mt-1">Direct resident memory /proc statm</div>
         </div>
 
-        <div class="bg-surface-card border border-surface-border rounded-xl p-4">
-          <div class="text-xs text-slate-400 font-medium">P95 Request Latency</div>
-          <div class="text-2xl font-bold text-white mono mt-1" id="kpiLatency">24 ms</div>
-          <div class="text-[11px] text-emerald-400 mt-1" id="kpiLatencyLabel">Normal baseline (Target &lt; 200ms)</div>
+        <div class="theme-card rounded-xl p-4">
+          <div class="text-xs theme-text-secondary font-medium">P95 Request Latency</div>
+          <div class="text-2xl font-bold theme-text-primary mono mt-1" id="kpiLatency">24 ms</div>
+          <div class="text-[11px] text-emerald-600 mt-1 font-medium" id="kpiLatencyLabel">Normal baseline (Target &lt; 200ms)</div>
         </div>
 
-        <div class="bg-surface-card border border-surface-border rounded-xl p-4">
-          <div class="text-xs text-slate-400 font-medium">HTTP Error Rate (5xx)</div>
-          <div class="text-2xl font-bold text-white mono mt-1" id="kpiErrorRate">0.00 /s</div>
-          <div class="text-[11px] text-slate-400 mt-1">Live Prometheus error counter</div>
+        <div class="theme-card rounded-xl p-4">
+          <div class="text-xs theme-text-secondary font-medium">HTTP Error Rate (5xx)</div>
+          <div class="text-2xl font-bold theme-text-primary mono mt-1" id="kpiErrorRate">0.00 /s</div>
+          <div class="text-[11px] theme-text-secondary mt-1">Live Prometheus error counter</div>
         </div>
 
       </div>
 
       <!-- Raw Prometheus Metrics Stream -->
-      <div class="bg-surface-card border border-surface-border rounded-xl p-5 space-y-4">
+      <div class="theme-card rounded-xl p-5 space-y-4">
         <div class="flex items-center justify-between">
           <div>
-            <h3 class="text-sm font-bold text-white flex items-center gap-2">
-              <i data-lucide="database" class="w-4 h-4 text-brand-400"></i>
+            <h3 class="text-sm font-bold theme-text-primary flex items-center gap-2">
+              <svg class="w-4 h-4 theme-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+              </svg>
               <span>Prometheus Metric Exposition Feed</span>
             </h3>
-            <p class="text-xs text-slate-400 mt-0.5">Scraped directly from live services via <span class="mono text-brand-300">GET /metrics</span> endpoints</p>
+            <p class="text-xs theme-text-secondary mt-0.5">Scraped directly from live services via <span class="mono theme-accent font-medium">GET /metrics</span> endpoints</p>
           </div>
-          <a href="/api/v1/mesh/metrics" target="_blank" class="px-3 py-1.5 rounded-lg bg-surface-subtle hover:bg-surface-border border border-surface-border text-xs text-brand-300 flex items-center gap-1.5 transition-colors">
-            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+          <a href="/api/v1/mesh/metrics" target="_blank" class="px-3 py-1.5 rounded-lg theme-subtle text-xs font-medium theme-accent flex items-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
             <span>View Raw /metrics</span>
           </a>
         </div>
 
         <!-- PromQL Filter Input -->
-        <div class="flex items-center gap-2 bg-surface-bg border border-surface-border rounded-lg px-3 py-2">
-          <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
-          <input type="text" id="promqlSearchInput" placeholder="Filter metrics (e.g. process_cpu_percent, service_up, payment-service)..." class="bg-transparent border-0 text-xs text-white placeholder-slate-500 focus:outline-none w-full mono">
+        <div class="flex items-center gap-2 theme-subtle rounded-lg px-3 py-2">
+          <svg class="w-4 h-4 theme-text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="promqlSearchInput" placeholder="Filter metrics (e.g. process_cpu_percent, service_up, payment-service)..." class="bg-transparent border-0 text-xs theme-text-primary placeholder-slate-400 focus:outline-none w-full mono">
         </div>
 
         <!-- Terminal Output -->
-        <pre id="rawPrometheusOutput" class="p-4 rounded-lg bg-[#070b12] border border-surface-border text-slate-300 mono text-xs h-96 overflow-y-auto custom-scroll leading-relaxed">
+        <pre id="rawPrometheusOutput" class="p-4 rounded-lg theme-terminal mono text-xs h-96 overflow-y-auto custom-scroll leading-relaxed">
 Fetching real Prometheus metrics from host...
         </pre>
       </div>
@@ -320,41 +458,28 @@ Fetching real Prometheus metrics from host...
     <!-- TAB 3: VISUALIZATION & GRAFANA -->
     <!-- ========================================================================================= -->
     <section id="view-grafana" class="tab-content space-y-6">
-      
-      <div class="bg-surface-card border border-surface-border rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <h2 class="text-lg font-bold text-white flex items-center gap-2">
-            <i data-lucide="layout-dashboard" class="w-5 h-5 text-brand-400"></i>
-            <span>Grafana Live Telemetry Dashboard</span>
-          </h2>
-          <p class="text-xs text-slate-400 mt-1">Real-time visualization panels for Online Boutique microservice health, request distributions, and SLA metrics.</p>
-        </div>
-        <div class="flex items-center gap-3">
-          <span class="text-xs text-slate-400 mono">Data Source: Localhost Prometheus Exporter</span>
-        </div>
-      </div>
 
       <!-- Grafana Panel Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         
         <!-- Panel 1: Service Uptime & Health State -->
-        <div class="bg-surface-card border border-surface-border rounded-xl p-4">
-          <div class="flex items-center justify-between mb-3 border-b border-surface-border/60 pb-2">
-            <span class="text-xs font-bold text-white uppercase tracking-wider">Service State & Availability</span>
-            <span class="text-[11px] mono text-slate-400">service_up == 1</span>
+        <div class="theme-card rounded-xl p-5">
+          <div class="flex items-center justify-between mb-4 border-b theme-divider pb-3">
+            <span class="text-xs font-bold theme-text-primary uppercase tracking-wider">Service State &amp; Availability</span>
+            <span class="text-[11px] mono theme-text-secondary">service_up == 1</span>
           </div>
-          <div id="grafanaHealthTiles" class="grid grid-cols-5 gap-2 h-32 items-center">
+          <div id="grafanaHealthTiles" class="grid grid-cols-5 gap-2.5 h-32 items-center">
             <!-- Tiles populated by JS -->
           </div>
         </div>
 
         <!-- Panel 2: Latency Distribution -->
-        <div class="bg-surface-card border border-surface-border rounded-xl p-4">
-          <div class="flex items-center justify-between mb-3 border-b border-surface-border/60 pb-2">
-            <span class="text-xs font-bold text-white uppercase tracking-wider">Request Duration (Seconds)</span>
-            <span class="text-[11px] mono text-slate-400">http_request_duration_seconds</span>
+        <div class="theme-card rounded-xl p-5">
+          <div class="flex items-center justify-between mb-4 border-b theme-divider pb-3">
+            <span class="text-xs font-bold theme-text-primary uppercase tracking-wider">Request Duration (Seconds)</span>
+            <span class="text-[11px] mono theme-text-secondary">http_request_duration_seconds</span>
           </div>
-          <div class="space-y-3 pt-2" id="grafanaLatencyBars">
+          <div class="space-y-3 pt-1" id="grafanaLatencyBars">
             <!-- Latency progress bars populated by JS -->
           </div>
         </div>
@@ -368,23 +493,20 @@ Fetching real Prometheus metrics from host...
     <!-- ========================================================================================= -->
     <section id="view-chaos" class="tab-content space-y-6">
       
-      <div class="bg-surface-card border border-surface-border rounded-xl p-5">
-        <h2 class="text-lg font-bold text-white flex items-center gap-2">
-          <i data-lucide="flame" class="w-5 h-5 text-rose-400"></i>
-          <span>Real Fault Injection Console</span>
-        </h2>
-        <p class="text-xs text-slate-400 mt-1">Trigger authentic faults on local containers. The selected failure executes directly on the process socket, causing immediate live alerts.</p>
-      </div>
-
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         <!-- Fault Injection Controls Form -->
-        <div class="bg-surface-card border border-surface-border rounded-xl p-5 space-y-4">
-          <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Configure Fault</h3>
+        <div class="theme-card rounded-xl p-5 space-y-4">
+          <div class="flex items-center gap-2 border-b theme-divider pb-3">
+            <svg class="w-4 h-4 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            <h3 class="text-xs font-bold theme-text-primary uppercase tracking-wider">Fault Injection Console</h3>
+          </div>
           
           <div>
-            <label class="block text-xs font-medium text-slate-300 mb-1.5">Target Microservice</label>
-            <select id="chaosServiceSelect" class="w-full bg-surface-subtle border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500 mono">
+            <label class="block text-xs font-medium theme-text-secondary mb-1.5">Target Microservice</label>
+            <select id="chaosServiceSelect" class="w-full theme-input rounded-lg px-3 py-2 text-xs mono">
               <option value="payment-service">payment-service (Port 8081 - Go)</option>
               <option value="cart-service">cart-service (Port 8082 - C#)</option>
               <option value="frontend">frontend (Port 8083 - Go)</option>
@@ -394,38 +516,31 @@ Fetching real Prometheus metrics from host...
           </div>
 
           <div>
-            <label class="block text-xs font-medium text-slate-300 mb-1.5">Experiment Type (Real Action)</label>
-            <select id="chaosTypeSelect" class="w-full bg-surface-subtle border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500 mono">
-              <option value="PodFailure">💥 Pod Failure / SIGKILL (Halts Listener & Port)</option>
-              <option value="StressChaos">🔥 StressChaos (Spike CPU & Memory >90%)</option>
-              <option value="NetworkLatency">⏱️ Network Latency (Inject 850ms RTT Delay)</option>
+            <label class="block text-xs font-medium theme-text-secondary mb-1.5">Experiment Type</label>
+            <select id="chaosTypeSelect" class="w-full theme-input rounded-lg px-3 py-2 text-xs mono">
+              <option value="PodFailure">Pod Failure / SIGKILL (Halts Listener &amp; Pod)</option>
+              <option value="StressChaos">StressChaos (Spike CPU &amp; Memory &gt;90%)</option>
+              <option value="NetworkLatency">Network Latency (Inject 850ms RTT Delay)</option>
             </select>
           </div>
 
-          <div>
-            <label class="block text-xs font-medium text-slate-300 mb-1.5">Tenant SLA Context</label>
-            <select id="chaosTenantSelect" class="w-full bg-surface-subtle border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500 mono">
-              <option value="tenant_a">Tenant A (Tier 1 VIP - 5 Minute SLA)</option>
-              <option value="tenant_b">Tenant B (Standard - 15 Minute SLA)</option>
-              <option value="tenant_c">Tenant C (Batch - 30 Minute SLA)</option>
-            </select>
-          </div>
-
-          <button id="btnInjectChaos" onclick="executeRealChaosInjection()" class="w-full py-2.5 px-4 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-colors shadow-lg shadow-rose-900/30">
-            <i data-lucide="zap" class="w-4 h-4"></i>
-            <span>Inject Real Fault & Trigger Alert</span>
+          <button id="btnInjectChaos" onclick="executeRealChaosInjection()" class="w-full py-2.5 px-4 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-colors shadow-sm">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            <span>Inject Fault &amp; Trigger Alert</span>
           </button>
         </div>
 
         <!-- Terminal Execution Log -->
-        <div class="lg:col-span-2 bg-surface-card border border-surface-border rounded-xl p-5 flex flex-col">
-          <div class="flex items-center justify-between mb-3 border-b border-surface-border pb-2">
-            <span class="text-xs font-bold text-white uppercase tracking-wider">Chaos Engine Execution Log</span>
-            <span class="text-[11px] mono text-slate-400">PostgreSQL Ground-Truth Ledger</span>
+        <div class="lg:col-span-2 theme-card rounded-xl p-5 flex flex-col">
+          <div class="flex items-center justify-between mb-3 border-b theme-divider pb-2">
+            <span class="text-xs font-bold theme-text-primary uppercase tracking-wider">Chaos Engine Execution Log</span>
+            <span class="text-[11px] mono theme-text-secondary">Live Telemetry Stream</span>
           </div>
 
-          <div id="chaosTerminalOutput" class="flex-1 p-4 rounded-lg bg-[#070b12] border border-surface-border text-slate-300 mono text-xs h-72 overflow-y-auto custom-scroll space-y-1.5 leading-relaxed">
-            <div class="text-slate-500">[STANDBY] Ready for precision fault injection. Select target service and experiment type above.</div>
+          <div id="chaosTerminalOutput" class="flex-1 p-4 rounded-lg theme-terminal mono text-xs h-72 overflow-y-auto custom-scroll space-y-1.5 leading-relaxed">
+            <div class="theme-text-secondary">[STANDBY] Ready for fault injection. Select target service and experiment type.</div>
           </div>
         </div>
 
@@ -438,92 +553,97 @@ Fetching real Prometheus metrics from host...
     <!-- ========================================================================================= -->
     <section id="view-incidents" class="tab-content space-y-6">
       
-      <div class="bg-surface-card border border-surface-border rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <h2 class="text-lg font-bold text-white flex items-center gap-2">
-            <i data-lucide="shield-check" class="w-5 h-5 text-brand-400"></i>
-            <span>Incident Queue & Human Approval Gate</span>
-          </h2>
-          <p class="text-xs text-slate-400 mt-1">Multi-tenant SLA triage queue with mandatory operator approval before executing automated playbooks.</p>
+      <div class="theme-card rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex items-center gap-2.5">
+          <svg class="w-5 h-5 theme-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>
+          </svg>
+          <h2 class="text-base font-bold theme-text-primary">Incident Queue &amp; Human Approval Gate</h2>
         </div>
         <div class="flex items-center gap-2">
-          <span class="text-xs text-slate-400">Active Incidents:</span>
-          <span id="activeIncidentsBadge" class="px-2 py-0.5 rounded text-xs font-bold bg-amber-950 text-amber-300 border border-amber-800">0 Active</span>
+          <span class="text-xs theme-text-secondary">Active Incidents:</span>
+          <span id="activeIncidentsBadge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold badge-pending">0 Active</span>
         </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         <!-- Incidents List -->
-        <div class="bg-surface-card border border-surface-border rounded-xl p-4 space-y-3">
-          <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Triage Queue</h3>
+        <div class="theme-card rounded-xl p-4 space-y-3">
+          <h3 class="text-xs font-bold theme-text-secondary uppercase tracking-wider">Triage Queue</h3>
           <div id="incidentsQueueList" class="space-y-2 max-h-[500px] overflow-y-auto custom-scroll">
-            <div class="p-6 text-center text-slate-500 text-xs">No active incidents. System healthy.</div>
+            <div class="p-6 text-center theme-text-secondary text-xs">No active incidents. System healthy.</div>
           </div>
         </div>
 
         <!-- Incident Inspection & Human Approval Gate -->
         <div class="lg:col-span-2 space-y-5">
           
-          <!-- HUMAN APPROVAL BANNER CARD (THE CRITICAL FIX) -->
-          <div id="humanApprovalGateCard" class="hidden bg-gradient-to-r from-amber-950/70 to-slate-900 border-2 border-amber-500/80 rounded-xl p-5 shadow-xl">
+          <!-- HUMAN APPROVAL BANNER CARD -->
+          <div id="humanApprovalGateCard" class="hidden approval-gate rounded-xl p-5 shadow-sm">
             <div class="flex items-start justify-between gap-4">
-              <div class="flex items-start gap-3">
-                <div class="w-10 h-10 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 flex-shrink-0">
-                  <i data-lucide="shield-alert" class="w-5 h-5"></i>
+              <div class="flex items-start gap-3 w-full">
+                <div class="w-10 h-10 rounded-lg badge-pending flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
                 </div>
-                <div>
-                  <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                <div class="flex-1">
+                  <h4 class="text-sm font-bold theme-text-primary flex items-center gap-2">
                     <span>ACTION PAUSED — HUMAN APPROVAL REQUIRED</span>
-                    <span class="text-[10px] px-2 py-0.5 rounded bg-amber-900 text-amber-200 uppercase font-mono">Operator Sign-Off</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded badge-pending uppercase font-mono">Operator Sign-Off</span>
                   </h4>
-                  <p class="text-xs text-amber-200/90 mt-1">The AI SRE has completed root cause analysis and formulated a self-healing action. Because <strong>Human Approval Mode</strong> is active, the system is strictly waiting for your sign-off.</p>
+                  <p class="text-xs theme-text-secondary mt-1">The AI SRE has completed root cause analysis and formulated a self-healing action. Because <strong>Human Approval Mode</strong> is active, the system is waiting for your sign-off.</p>
                   
-                  <div class="mt-3 p-3 rounded-lg bg-black/40 border border-white/10 text-xs mono text-slate-200">
-                    <span class="text-slate-400">Proposed Remediation:</span>
-                    <div id="gateActionCommand" class="text-brand-300 font-semibold mt-0.5">ansible-playbook ansible/restart_service.yml -e service=payment-service</div>
+                  <div class="mt-3 p-3 rounded-lg theme-card text-xs mono theme-text-primary">
+                    <span class="theme-text-secondary">Proposed Remediation:</span>
+                    <div id="gateActionCommand" class="theme-accent font-semibold mt-0.5">ansible-playbook -i ansible/inventory.ini ansible/restart_service.yml -e service=payment-service</div>
                   </div>
                 </div>
               </div>
             </div>
 
             <!-- Explicit Approve vs Reject Controls -->
-            <div class="mt-4 pt-3 border-t border-amber-500/30 flex items-center justify-end gap-3">
-              <button onclick="rejectPendingIncident()" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors border border-slate-700">
-                <i data-lucide="x-circle" class="w-4 h-4 text-rose-400"></i>
+            <div class="mt-4 pt-3 border-t theme-divider flex items-center justify-end gap-3">
+              <button onclick="rejectPendingIncident()" class="px-4 py-2 rounded-lg theme-card theme-text-primary text-xs font-semibold flex items-center gap-1.5 transition-colors hover:opacity-90">
+                <svg class="w-4 h-4 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
                 <span>Reject Action</span>
               </button>
-              <button onclick="approvePendingIncident()" class="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-lg shadow-emerald-950">
-                <i data-lucide="check-circle-2" class="w-4 h-4"></i>
-                <span>Approve & Execute Self-Healing</span>
+              <button onclick="approvePendingIncident()" class="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                <span>Approve &amp; Execute Self-Healing</span>
               </button>
             </div>
           </div>
 
           <!-- Incident Details Inspection -->
-          <div id="incidentDetailsCard" class="bg-surface-card border border-surface-border rounded-xl p-5 space-y-4">
-            <div class="flex items-center justify-between border-b border-surface-border pb-3">
+          <div id="incidentDetailsCard" class="theme-card rounded-xl p-5 space-y-4">
+            <div class="flex items-center justify-between border-b theme-divider pb-3">
               <div>
-                <span class="text-xs text-slate-400">Selected Incident:</span>
-                <span id="inspIncidentId" class="text-xs font-bold text-white mono ml-1">None Selected</span>
+                <span class="text-xs theme-text-secondary">Selected Incident:</span>
+                <span id="inspIncidentId" class="text-xs font-bold theme-text-primary mono ml-1">None Selected</span>
               </div>
-              <span id="inspStatusBadge" class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-300">N/A</span>
+              <span id="inspStatusBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full theme-subtle theme-text-secondary">N/A</span>
             </div>
 
             <!-- AI SRE Diagnosis Block -->
-            <div class="p-4 rounded-lg bg-surface-subtle border border-surface-border space-y-2">
-              <div class="text-xs text-slate-400 uppercase font-semibold">AI SRE Root Cause Analysis (RAG ChromaDB)</div>
-              <div id="inspRcaHeadline" class="text-sm font-semibold text-white">Select an incident from the triage queue to inspect diagnosis</div>
-              <div class="flex items-center gap-4 text-xs text-slate-400 pt-1">
-                <div>Confidence Score: <span id="inspConfidence" class="text-emerald-400 font-bold mono">--</span></div>
-                <div>Matched Runbook: <span id="inspRunbook" class="text-brand-300 font-mono">--</span></div>
+            <div class="p-4 rounded-lg theme-subtle space-y-2">
+              <div class="text-xs theme-text-secondary uppercase font-semibold">AI SRE Root Cause Analysis</div>
+              <div id="inspRcaHeadline" class="text-sm font-semibold theme-text-primary">Select an incident from the triage queue to inspect diagnosis</div>
+              <div class="flex flex-wrap items-center gap-6 text-xs theme-text-secondary pt-1">
+                <div>Root Cause Service: <span id="inspPrimaryService" class="theme-accent font-bold mono">--</span></div>
+                <div>Confidence Score: <span id="inspConfidence" class="text-emerald-600 font-bold mono">--</span></div>
               </div>
             </div>
 
             <!-- Execution Terminal Stream -->
             <div>
-              <div class="text-xs font-semibold text-slate-400 mb-2">Remediation Execution Terminal (Ansible Output)</div>
-              <pre id="remediationStreamOutput" class="p-4 rounded-lg bg-[#070b12] border border-surface-border text-slate-300 mono text-xs h-48 overflow-y-auto custom-scroll leading-relaxed">
+              <div class="text-xs font-semibold theme-text-secondary mb-2">Remediation Execution Terminal (Ansible Output)</div>
+              <pre id="remediationStreamOutput" class="p-4 rounded-lg theme-terminal mono text-xs h-56 overflow-y-auto custom-scroll leading-relaxed">
 [STANDBY] Waiting for incident selection or operator approval action.
               </pre>
             </div>
@@ -545,14 +665,46 @@ Fetching real Prometheus metrics from host...
   <script>
     // State
     let currentTab = 'architecture';
-    let isAutonomousMode = false; // Default to Human Approval Gate!
+    let isAutonomousMode = false; // Default to Human Approval Gate
     let meshServices = [];
     let activeIncidents = [];
     let selectedIncident = null;
 
+    // SVG Icon Snippets (Zero Emojis)
+    const SVG_ICONS = {
+      cube: `<svg class="w-3.5 h-3.5 theme-accent flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
+      server: `<svg class="w-3.5 h-3.5 theme-text-secondary flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>`,
+      zap: `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+      shieldAlert: `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
+    };
+
+    // Theme Switcher (Light / Dark Mode with localStorage persistence)
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('sentinelas_theme', theme);
+      const sunIcon = document.getElementById('themeIconSun');
+      const moonIcon = document.getElementById('themeIconMoon');
+      if (sunIcon && moonIcon) {
+        if (theme === 'dark') {
+          sunIcon.classList.remove('hidden');
+          moonIcon.classList.add('hidden');
+        } else {
+          sunIcon.classList.add('hidden');
+          moonIcon.classList.remove('hidden');
+        }
+      }
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+    }
+
     // Initialize on load
     window.addEventListener('DOMContentLoaded', async () => {
-      lucide.createIcons();
+      const savedTheme = localStorage.getItem('sentinelas_theme') || 'light';
+      applyTheme(savedTheme);
       await fetchOperatingMode();
       await refreshAllData();
       
@@ -586,8 +738,6 @@ Fetching real Prometheus metrics from host...
       if (tabId === 'architecture') loadMeshStatus();
       if (tabId === 'metrics') loadRawPrometheusMetrics();
       if (tabId === 'incidents') loadIncidents();
-
-      lucide.createIcons();
     }
 
     // Operating Mode Toggle (Human Approval vs Autonomous)
@@ -614,7 +764,7 @@ Fetching real Prometheus metrics from host...
         showToast(
           isAutonomousMode 
             ? "Autonomous Mode Enabled: Incidents will self-heal automatically" 
-            : "Human Approval Gate Active: Remediation strictly requires operator sign-off",
+            : "Human Approval Gate Active: Remediation requires operator sign-off",
           isAutonomousMode ? "info" : "warning"
         );
       } catch (err) {
@@ -625,18 +775,17 @@ Fetching real Prometheus metrics from host...
     function renderModeButton() {
       const btn = document.getElementById("modeToggleBtn");
       const label = document.getElementById("modeLabel");
-      const icon = document.getElementById("modeIcon");
+      const iconContainer = document.getElementById("modeIconSvg");
 
       if (isAutonomousMode) {
-        btn.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-semibold transition-all bg-emerald-950/60 border-emerald-600/50 text-emerald-300 hover:bg-emerald-900/50";
+        btn.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all badge-healthy";
         label.innerText = "Autonomous Self-Healing (Active)";
-        icon.setAttribute("data-lucide", "zap");
+        if (iconContainer) iconContainer.outerHTML = `<svg id="modeIconSvg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`;
       } else {
-        btn.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-semibold transition-all bg-amber-950/60 border-amber-600/50 text-amber-300 hover:bg-amber-900/50";
+        btn.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all badge-pending";
         label.innerText = "Human Approval Gate (Active)";
-        icon.setAttribute("data-lucide", "shield-alert");
+        if (iconContainer) iconContainer.outerHTML = `<svg id="modeIconSvg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
       }
-      lucide.createIcons();
     }
 
     // Refresh All Data
@@ -659,10 +808,15 @@ Fetching real Prometheus metrics from host...
         meshServices = services;
 
         const healthyCount = services.filter(s => s.status === 'HEALTHY').length;
-        document.getElementById("headerMeshHealth").innerText = `${healthyCount}/${services.length} UP`;
-        document.getElementById("headerMeshHealth").className = healthyCount === services.length 
-          ? "font-semibold text-emerald-400" 
-          : "font-semibold text-rose-400";
+        const healthEl = document.getElementById("headerMeshHealth");
+        const dotEl = document.getElementById("headerHeartbeatDot");
+        healthEl.innerText = `${healthyCount}/${services.length} UP`;
+        healthEl.className = healthyCount === services.length 
+          ? "font-semibold text-emerald-600" 
+          : "font-semibold text-rose-600";
+        if (dotEl) {
+          dotEl.style.backgroundColor = healthyCount === services.length ? '#16a34a' : '#dc2626';
+        }
 
         // Update Topology Diagram Badges
         services.forEach(s => {
@@ -671,12 +825,12 @@ Fetching real Prometheus metrics from host...
           if (badge && card) {
             if (s.status === 'HEALTHY') {
               badge.innerText = "UP";
-              badge.className = "text-[10px] font-bold text-emerald-400";
-              card.className = "border border-brand-500/40 bg-surface-subtle rounded-lg p-3 text-center";
+              badge.className = "text-[10px] font-bold px-1.5 py-0.5 rounded badge-healthy";
+              card.className = "theme-card rounded-lg p-3 text-center";
             } else {
               badge.innerText = "CRASHED";
-              badge.className = "text-[10px] font-bold text-rose-400 animate-pulse";
-              card.className = "border-2 border-rose-500 bg-rose-950/30 rounded-lg p-3 text-center shadow-lg shadow-rose-950";
+              badge.className = "text-[10px] font-bold px-1.5 py-0.5 rounded badge-critical animate-pulse";
+              card.className = "border-2 border-rose-500 theme-card rounded-lg p-3 text-center";
             }
           }
         });
@@ -686,36 +840,36 @@ Fetching real Prometheus metrics from host...
         grid.innerHTML = services.map(s => {
           const isUp = s.status === 'HEALTHY';
           const k8sInfo = s.k8s_pod 
-            ? `<div class="p-2 rounded-lg bg-slate-900/60 border border-slate-800 flex items-center justify-between text-[11px] mono">
-                 <div class="truncate text-slate-300 flex items-center gap-1.5">
-                   <span class="text-blue-400">☸️</span>
-                   <span class="truncate font-semibold text-sky-300">${s.k8s_pod.pod_name}</span>
+            ? `<div class="p-2 rounded-lg theme-subtle flex items-center justify-between text-[11px] mono">
+                 <div class="truncate theme-text-primary flex items-center gap-1.5">
+                   ${SVG_ICONS.cube}
+                   <span class="truncate font-semibold theme-accent">${s.k8s_pod.pod_name}</span>
                  </div>
-                 <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${s.k8s_pod.pod_phase === 'Running' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-rose-950 text-rose-400 border border-rose-800'}">
+                 <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${s.k8s_pod.pod_phase === 'Running' ? 'badge-healthy' : 'badge-critical'}">
                    ${s.k8s_pod.pod_phase} (r:${s.k8s_pod.restart_count || 0})
                  </span>
                </div>`
-            : `<div class="p-2 rounded-lg bg-slate-900/40 border border-slate-800/60 flex items-center justify-between text-[10px] text-slate-400 mono">
-                 <span class="flex items-center gap-1"><span class="text-amber-400">⚡</span> Host Mesh Process</span>
-                 <span class="text-slate-500">K8s: Standby</span>
+            : `<div class="p-2 rounded-lg theme-subtle flex items-center justify-between text-[10px] theme-text-secondary mono">
+                 <span class="flex items-center gap-1.5">${SVG_ICONS.server}<span>Host Mesh Process</span></span>
+                 <span>K8s: Standby</span>
                </div>`;
 
           return `
-            <div class="p-4 rounded-xl border ${isUp ? 'border-surface-border bg-surface-card' : 'border-rose-500/60 bg-rose-950/20'} space-y-3">
+            <div class="p-4 rounded-xl ${isUp ? 'theme-card' : 'theme-card border-2 border-rose-500'} space-y-3">
               <div class="flex items-center justify-between">
                 <div>
-                  <h4 class="font-bold text-white text-xs mono">${s.service}</h4>
-                  <div class="text-[11px] text-slate-400">${s.role}</div>
+                  <h4 class="font-bold theme-text-primary text-xs mono">${s.service}</h4>
+                  <div class="text-[11px] theme-text-secondary">${s.role}</div>
                 </div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isUp ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-rose-950 text-rose-300 border border-rose-800 animate-pulse'}">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isUp ? 'badge-healthy' : 'badge-critical animate-pulse'}">
                   ${s.status}
                 </span>
               </div>
               ${k8sInfo}
-              <div class="grid grid-cols-3 gap-2 text-[11px] mono pt-2 border-t border-surface-border/50 text-slate-300">
-                <div>Port: <span class="text-white">${s.port}</span></div>
-                <div>CPU: <span class="text-white">${s.cpu_percent}%</span></div>
-                <div>RAM: <span class="text-white">${s.memory_mb}MB</span></div>
+              <div class="grid grid-cols-3 gap-2 text-[11px] mono pt-2 border-t theme-divider theme-text-secondary">
+                <div>Port: <span class="theme-text-primary font-semibold">${s.port}</span></div>
+                <div>CPU: <span class="theme-text-primary font-semibold">${s.cpu_percent}%</span></div>
+                <div>RAM: <span class="theme-text-primary font-semibold">${s.memory_mb}MB</span></div>
               </div>
             </div>
           `;
@@ -725,9 +879,9 @@ Fetching real Prometheus metrics from host...
         const tiles = document.getElementById("grafanaHealthTiles");
         if (tiles) {
           tiles.innerHTML = services.map(s => `
-            <div class="p-2 rounded text-center text-xs font-semibold ${s.status === 'HEALTHY' ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-700' : 'bg-rose-950/80 text-rose-300 border border-rose-700 animate-pulse'}">
+            <div class="p-2.5 rounded-lg text-center text-xs font-semibold ${s.status === 'HEALTHY' ? 'badge-healthy' : 'badge-critical animate-pulse'}">
               <div class="mono text-[10px] truncate">${s.service}</div>
-              <div class="text-[11px] mt-1">${s.status === 'HEALTHY' ? '1.0' : '0.0'}</div>
+              <div class="text-xs font-bold mt-1">${s.status === 'HEALTHY' ? '1.0' : '0.0'}</div>
             </div>
           `).join('');
         }
@@ -740,12 +894,12 @@ Fetching real Prometheus metrics from host...
             const pct = Math.min(100, Math.max(5, (lat / 1000) * 100));
             return `
               <div>
-                <div class="flex justify-between text-xs mono text-slate-300 mb-1">
-                  <span>${s.service}</span>
-                  <span>${lat} ms</span>
+                <div class="flex justify-between text-xs mono theme-text-primary mb-1">
+                  <span class="font-medium">${s.service}</span>
+                  <span class="theme-text-secondary">${lat} ms</span>
                 </div>
-                <div class="w-full bg-surface-subtle h-2 rounded-full overflow-hidden">
-                  <div class="h-full ${lat > 300 ? 'bg-rose-500' : 'bg-brand-500'}" style="width: ${pct}%"></div>
+                <div class="w-full theme-subtle h-2 rounded-full overflow-hidden">
+                  <div class="h-full ${lat > 300 ? 'bg-rose-600' : 'bg-blue-600'}" style="width: ${pct}%"></div>
                 </div>
               </div>
             `;
@@ -788,22 +942,21 @@ Fetching real Prometheus metrics from host...
     async function executeRealChaosInjection() {
       const service = document.getElementById("chaosServiceSelect").value;
       const expType = document.getElementById("chaosTypeSelect").value;
-      const tenant = document.getElementById("chaosTenantSelect").value;
       const btn = document.getElementById("btnInjectChaos");
       const terminal = document.getElementById("chaosTerminalOutput");
 
       btn.disabled = true;
-      btn.innerText = "Injecting Failure on Live Container...";
+      btn.innerText = "Injecting Fault...";
 
       const logMsg = (msg, isErr = false) => {
         const row = document.createElement("div");
-        row.className = isErr ? "text-rose-400 font-bold" : "text-brand-300";
+        row.className = isErr ? "text-rose-600 font-bold" : "theme-text-primary";
         row.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
         terminal.appendChild(row);
         terminal.scrollTop = terminal.scrollHeight;
       };
 
-      logMsg(`Executing REAL ${expType} against '${service}'...`);
+      logMsg(`Executing ${expType} against '${service}'...`);
 
       try {
         const res = await fetch('/api/v1/chaos/inject', {
@@ -812,29 +965,28 @@ Fetching real Prometheus metrics from host...
           body: JSON.stringify({
             service: service,
             experiment_type: expType,
-            tenant_id: tenant,
+            tenant_id: "tenant_a",
             duration_seconds: 60
           })
         });
 
         const data = await res.json();
         logMsg(`FAULT INJECTED: ${data.ground_truth.ground_truth_cause}`);
-        logMsg(`Alerts Cascaded: ${data.compressed_alerts_count} raw telemetry alerts compressed into Incident ${data.correlated_incident_id}`);
-        logMsg(`AI Agent Initialized: ${data.investigation.root_cause_analysis.diagnosis}`);
+        logMsg(`Alerts Correlated: ${data.compressed_alerts_count} telemetry alerts grouped into Incident ${data.correlated_incident_id}`);
+        logMsg(`AI Diagnosis: ${data.investigation.root_cause_analysis.diagnosis}`);
 
-        showToast(`Chaos injected into ${service}! Alert triggered.`, "warning");
+        showToast(`Fault injected on ${service}. Incident created.`, "warning");
         await loadMeshStatus();
         await loadIncidents();
 
-        // Switch to Incidents tab so user sees the Human Approval gate!
+        // Switch to Incidents tab so user sees the Human Approval gate
         setTimeout(() => switchTab('incidents'), 1200);
 
       } catch (err) {
         logMsg(`Injection Error: ${err.message}`, true);
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="zap" class="w-4 h-4"></i><span>Inject Real Fault & Trigger Alert</span>`;
-        lucide.createIcons();
+        btn.innerHTML = `${SVG_ICONS.zap}<span>Inject Fault &amp; Trigger Alert</span>`;
       }
     }
 
@@ -856,33 +1008,33 @@ Fetching real Prometheus metrics from host...
         if (activeBadge) activeBadge.innerText = `${openCount} Active`;
 
         if (activeList.length === 0) {
-          list.innerHTML = `<div class="p-6 text-center text-slate-500 text-xs">No active incidents. System healthy.</div>`;
+          list.innerHTML = `<div class="p-6 text-center theme-text-secondary text-xs">No active incidents. System healthy.</div>`;
           document.getElementById("humanApprovalGateCard").classList.add("hidden");
           if (!selectedIncident || selectedIncident.incident.status === "RESOLVED") {
             document.getElementById("inspIncidentId").innerText = "None (All Resolved)";
             document.getElementById("inspStatusBadge").innerText = "RESOLVED";
-            document.getElementById("inspStatusBadge").className = "text-xs font-semibold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300";
+            document.getElementById("inspStatusBadge").className = "text-xs font-semibold px-2.5 py-0.5 rounded-full badge-healthy";
           }
           return;
         }
 
         list.innerHTML = activeList.map(item => {
           const inc = item.incident;
-          const sla = item.sla;
           const isPending = inc.status === "PENDING_APPROVAL";
+          const isSelected = selectedIncident?.incident.incident_id === inc.incident_id;
 
           return `
-            <div onclick="selectIncident('${inc.incident_id}')" class="p-3 rounded-lg border ${selectedIncident?.incident.incident_id === inc.incident_id ? 'border-brand-500 bg-surface-subtle' : 'border-surface-border bg-surface-bg'} hover:border-brand-500/60 cursor-pointer transition-all space-y-1.5">
+            <div onclick="selectIncident('${inc.incident_id}')" class="p-3 rounded-lg ${isSelected ? 'theme-subtle border-2 border-blue-600' : 'theme-card'} cursor-pointer transition-all space-y-1.5">
               <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-white mono">${inc.primary_service}</span>
-                <span class="px-1.5 py-0.2 rounded text-[10px] font-bold ${isPending ? 'bg-amber-950 text-amber-300 border border-amber-800 animate-pulse' : 'bg-rose-950 text-rose-400'}">
+                <span class="text-xs font-bold theme-text-primary mono">${inc.primary_service}</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isPending ? 'badge-pending' : 'badge-critical'}">
                   ${inc.status}
                 </span>
               </div>
-              <div class="text-[11px] text-slate-400 truncate">${inc.root_cause_candidate}</div>
-              <div class="flex items-center justify-between text-[10px] text-slate-500 mono pt-1 border-t border-surface-border/40">
-                <span>Tenant: ${inc.tenant_id}</span>
-                <span>Risk: ${sla.risk_score}</span>
+              <div class="text-[11px] theme-text-secondary truncate">${inc.root_cause_candidate}</div>
+              <div class="flex items-center justify-between text-[10px] theme-text-secondary mono pt-1 border-t theme-divider">
+                <span>ID: ${inc.incident_id}</span>
+                <span class="uppercase font-semibold">${inc.severity || 'CRITICAL'}</span>
               </div>
             </div>
           `;
@@ -906,8 +1058,8 @@ Fetching real Prometheus metrics from host...
       document.getElementById("inspIncidentId").innerText = incId;
       document.getElementById("inspStatusBadge").innerText = match.incident.status;
       document.getElementById("inspStatusBadge").className = match.incident.status === 'RESOLVED' 
-        ? "text-xs font-semibold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300"
-        : "text-xs font-semibold px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800";
+        ? "text-xs font-semibold px-2.5 py-0.5 rounded-full badge-healthy"
+        : "text-xs font-semibold px-2.5 py-0.5 rounded-full badge-pending";
 
       const gateCard = document.getElementById("humanApprovalGateCard");
       
@@ -923,12 +1075,11 @@ Fetching real Prometheus metrics from host...
         const diagData = await diagRes.json();
         const rca = diagData.root_cause_analysis;
 
-        document.getElementById("inspRcaHeadline").innerText = rca.diagnosis;
+        const targetSvc = rca.primary_service || match.incident.primary_service;
+        const cleanHeadline = (rca.diagnosis || "").replace(/^Runbook:\s*/i, "");
+        document.getElementById("inspRcaHeadline").innerText = cleanHeadline;
+        document.getElementById("inspPrimaryService").innerText = targetSvc;
         document.getElementById("inspConfidence").innerText = `${(rca.confidence_score * 100).toFixed(1)}%`;
-        if (rca.referenced_runbooks && rca.referenced_runbooks.length > 0) {
-          const topRb = rca.referenced_runbooks[0];
-          document.getElementById("inspRunbook").innerText = `${topRb.title} (Match: ${(topRb.similarity * 100).toFixed(1)}%)`;
-        }
 
         // CONTROL HUMAN APPROVAL GATE CARD
         if (!isAutonomousMode && match.incident.status !== "RESOLVED" && match.incident.status !== "REJECTED") {
@@ -947,12 +1098,15 @@ Fetching real Prometheus metrics from host...
     async function approvePendingIncident() {
       if (!selectedIncident) return;
       const incId = selectedIncident.incident.incident_id;
+      const svc = document.getElementById("inspPrimaryService")?.innerText !== "--"
+        ? document.getElementById("inspPrimaryService").innerText
+        : selectedIncident.incident.primary_service;
       const stream = document.getElementById("remediationStreamOutput");
       const gateCard = document.getElementById("humanApprovalGateCard");
 
       // Hide approval card immediately to prevent UI loop
       gateCard.classList.add("hidden");
-      stream.innerHTML = `<div>[APPROVAL GATE] Operator clicked APPROVE. Triggering Ansible playbook...</div>`;
+      stream.innerHTML = `<div class="theme-accent font-bold">$ ansible-playbook -i ansible/inventory.ini ansible/restart_service.yml -e service=${svc}</div>`;
 
       try {
         const res = await fetch(`/api/v1/incidents/${incId}/approve`, { method: 'POST' });
@@ -962,24 +1116,30 @@ Fetching real Prometheus metrics from host...
         data.execution_output.forEach((line, idx) => {
           setTimeout(() => {
             const row = document.createElement("div");
-            row.className = line.includes("PLAY RECAP") || line.includes("ok=") || line.includes("verified") 
-              ? "text-emerald-400 font-bold" 
-              : line.includes("FAILED") || line.includes("ERROR") 
-              ? "text-amber-400" 
-              : "text-slate-300";
-            row.innerText = line;
+            if (line.startsWith("$ ")) {
+              row.className = "theme-accent font-bold";
+            } else if (line.startsWith("PLAY [") || line.startsWith("TASK [") || line.startsWith("PLAY RECAP")) {
+              row.className = "theme-text-primary font-bold";
+            } else if (line.includes("ok:") || line.includes("ok=") || line.includes("changed:")) {
+              row.className = "text-emerald-600 font-semibold";
+            } else if (line.includes("FAILED") || line.includes("fatal:")) {
+              row.className = "text-rose-600 font-semibold";
+            } else {
+              row.className = "theme-text-primary";
+            }
+            row.innerText = line || " ";
             stream.appendChild(row);
             stream.scrollTop = stream.scrollHeight;
-          }, idx * 50);
+          }, idx * 40);
         });
 
-        showToast("Remediation Approved! Ansible playbook executed and incident RESOLVED.", "success");
+        showToast("Remediation Approved. Ansible playbook executed and incident RESOLVED.", "success");
         selectedIncident = null;
         await loadMeshStatus();
         await loadIncidents();
 
       } catch (err) {
-        stream.innerHTML += `<div class="text-rose-400">Approval error: ${err.message}</div>`;
+        stream.innerHTML += `<div class="text-rose-600 font-semibold">Approval error: ${err.message}</div>`;
       }
     }
 
@@ -996,7 +1156,7 @@ Fetching real Prometheus metrics from host...
         stream.innerHTML = "";
         data.execution_output.forEach(line => {
           const row = document.createElement("div");
-          row.className = "text-rose-400";
+          row.className = "text-rose-600 font-medium";
           row.innerText = line;
           stream.appendChild(row);
         });
@@ -1013,11 +1173,11 @@ Fetching real Prometheus metrics from host...
     function showToast(message, type = 'info') {
       const container = document.getElementById("toastContainer");
       const toast = document.createElement("div");
-      toast.className = `p-3 rounded-lg text-xs font-semibold shadow-xl border flex items-center gap-2 pointer-events-auto transition-all ${
-        type === 'success' ? 'bg-emerald-950 border-emerald-600 text-emerald-200' :
-        type === 'warning' ? 'bg-amber-950 border-amber-600 text-amber-200' :
-        type === 'error' ? 'bg-rose-950 border-rose-600 text-rose-200' :
-        'bg-slate-900 border-surface-border text-slate-200'
+      toast.className = `p-3 rounded-lg text-xs font-semibold shadow-md flex items-center gap-2 pointer-events-auto transition-all ${
+        type === 'success' ? 'badge-healthy' :
+        type === 'warning' ? 'badge-pending' :
+        type === 'error' ? 'badge-critical' :
+        'theme-card theme-text-primary'
       }`;
       toast.innerHTML = `<span>${message}</span>`;
       container.appendChild(toast);

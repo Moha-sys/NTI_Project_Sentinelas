@@ -177,7 +177,7 @@ class AutonomousSREAgent:
             confidence = 0.88
 
         remediation_action = (
-            f"ansible-playbook ansible/restart_service.yml -e service={diagnosis_service}"
+            f"ansible-playbook -i ansible/inventory.ini ansible/restart_service.yml -e service={diagnosis_service}"
         )
 
         # Step 6: LLM narrative synthesis (evidence-grounded via RAG + ML)

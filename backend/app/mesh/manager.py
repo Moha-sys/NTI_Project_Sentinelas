@@ -560,7 +560,7 @@ class ProcessMeshManager:
         else:
             return {"status": "ERROR", "message": f"Unsupported experiment type: {experiment_type}"}
 
-    def remediate_service(self, name: str) -> Dict[str, Any]:
+    def remediate_service(self, name: str, skip_k8s_rollout: bool = False) -> Dict[str, Any]:
         if name.lower() == "all":
             for s in self.services.values():
                 s.resurrect_pod()
@@ -583,24 +583,25 @@ class ProcessMeshManager:
             if redis_s and not redis_s.is_running:
                 redis_s.resurrect_pod()
 
-        # Trigger real rollout restart in Kubernetes if deployment exists
+        # Trigger real rollout restart in Kubernetes if deployment exists (unless delegated to Ansible playbook)
         k8s_rollout = False
-        dep_names = [name.lower().replace("-", ""), name.lower()]
-        for dep in dep_names:
-            try:
-                import subprocess
-                res = subprocess.run(
-                    ["kubectl", "rollout", "restart", f"deployment/{dep}", "-n", "default"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10
-                )
-                if res.returncode == 0:
-                    k8s_rollout = True
-                    logger.info(f"Triggered Kubernetes rollout restart on deployment '{dep}'")
-                    break
-            except Exception as e:
-                logger.warning(f"Could not rollout restart Kubernetes deployment {dep}: {e}")
+        if not skip_k8s_rollout:
+            dep_names = [name.lower().replace("-", ""), name.lower()]
+            for dep in dep_names:
+                try:
+                    import subprocess
+                    res = subprocess.run(
+                        ["kubectl", "rollout", "restart", f"deployment/{dep}", "-n", "default"],
+                        capture_output=True,
+                        text=True,
+                        timeout=10
+                    )
+                    if res.returncode == 0:
+                        k8s_rollout = True
+                        logger.info(f"Triggered Kubernetes rollout restart on deployment '{dep}'")
+                        break
+                except Exception as e:
+                    logger.warning(f"Could not rollout restart Kubernetes deployment {dep}: {e}")
 
         msg = f"Ansible self-healing resurrected {name} on port {s.port}. Ingress traffic restored (HTTP 200 OK)."
         if k8s_rollout:
