@@ -22,11 +22,14 @@ from app.api.benchmarks import router as benchmarks_router
 from app.api.mesh import router as mesh_router
 from app.api.ml import router as ml_router
 from app.api.webhooks import router as webhooks_router
+from app.api.chat import router as chat_router          # CHAT: read-only assistant router
+from app.chat import logbuffer                          # CHAT: recent-log buffer for the assistant
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
+logbuffer.install()   # CHAT: must run AFTER basicConfig, otherwise basicConfig becomes a no-op
 logger = logging.getLogger(__name__)
 
 @asynccontextmanager
@@ -52,6 +55,13 @@ async def lifespan(app: FastAPI):
         logger.info(f"ML RCA pipeline ready: {health}")
     except Exception as e:
         logger.error(f"Failed to initialize ML RCA pipeline: {e}")
+
+    try:
+        from app.chat import docs_index
+        chunks = docs_index.index_docs()
+        logger.info(f"Chat docs index ready: {chunks} chunks.")
+    except Exception as e:
+        logger.error(f"Failed to index chat docs at startup: {e}")
 
     yield
     logger.info("Shutting down AIOps Platform Engine...")
@@ -82,6 +92,7 @@ app.include_router(benchmarks_router, prefix=settings.API_V1_PREFIX)
 app.include_router(mesh_router, prefix=settings.API_V1_PREFIX)
 app.include_router(ml_router, prefix=settings.API_V1_PREFIX)
 app.include_router(webhooks_router, prefix=settings.API_V1_PREFIX)
+app.include_router(chat_router, prefix=settings.API_V1_PREFIX)   # CHAT
 
 # Serve built React dashboard or embedded single-page app
 DASHBOARD_HTML_FILE = Path(__file__).resolve().parent.parent / "static" / "index.html"
